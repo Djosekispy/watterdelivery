@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserType } from '@/types';
 import { toast } from "sonner";
+import * as SecureStore from 'expo-secure-store';
 
 interface AuthContextType {
   user: User | null;
@@ -24,8 +25,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Initialize mock data if needed
   useEffect(() => {
-    // Load users from localStorage or initialize with empty array
-    const existingUsers = localStorage.getItem(MOCK_USERS_KEY);
+    // Load users from SecureStore or initialize with empty array
+    const existingUsers = SecureStore.getItem(MOCK_USERS_KEY);
     if (!existingUsers) {
       // Create some mock suppliers
       const initialUsers = [
@@ -57,11 +58,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           location: { lat: -23.5305, lng: -46.6233 },
         },
       ];
-      localStorage.setItem(MOCK_USERS_KEY, JSON.stringify(initialUsers));
+      SecureStore.setItem(MOCK_USERS_KEY, JSON.stringify(initialUsers));
     }
 
     // Check if user is already logged in
-    const savedUser = localStorage.getItem(CURRENT_USER_KEY);
+    const savedUser = SecureStore.getItem(CURRENT_USER_KEY);
     if (savedUser) {
       setUser(JSON.parse(savedUser));
     }
@@ -75,7 +76,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // For now, we'll simulate a delay and check against our mock data
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      const usersJson = localStorage.getItem(MOCK_USERS_KEY) || '[]';
+      const usersJson = SecureStore.getItem(MOCK_USERS_KEY) || '[]';
       const users = JSON.parse(usersJson) as User[];
 
       const matchedUser = users.find(u => u.email === email);
@@ -88,7 +89,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Here we're just simulating success
       
       // Save current user
-      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(matchedUser));
+      SecureStore.setItem(CURRENT_USER_KEY, JSON.stringify(matchedUser));
       setUser(matchedUser);
       toast.success('Login realizado com sucesso!');
     } catch (error) {
@@ -107,7 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Get existing users
-      const usersJson = localStorage.getItem(MOCK_USERS_KEY) || '[]';
+      const usersJson = SecureStore.getItem(MOCK_USERS_KEY) || '[]';
       const users = JSON.parse(usersJson) as User[];
 
       // Check if email already exists
@@ -127,10 +128,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Save to "database"
       users.push(newUser);
-      localStorage.setItem(MOCK_USERS_KEY, JSON.stringify(users));
+      SecureStore.setItem(MOCK_USERS_KEY, JSON.stringify(users));
 
       // Log user in
-      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(newUser));
+      SecureStore.setItem(CURRENT_USER_KEY, JSON.stringify(newUser));
       setUser(newUser);
       
       toast.success('Cadastro realizado com sucesso!');
@@ -143,8 +144,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem(CURRENT_USER_KEY);
+  const logout = async () => {
+   await  SecureStore.deleteItemAsync(CURRENT_USER_KEY);
     setUser(null);
     toast.info('Você saiu da sua conta');
   };
@@ -154,14 +155,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const updatedUser = { ...user, location };
     
-    // Update in localStorage
-    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updatedUser));
+    // Update in SecureStore
+    SecureStore.setItem(CURRENT_USER_KEY, JSON.stringify(updatedUser));
     
     // Update in users array
-    const usersJson = localStorage.getItem(MOCK_USERS_KEY) || '[]';
+    const usersJson = SecureStore.getItem(MOCK_USERS_KEY) || '[]';
     const users = JSON.parse(usersJson) as User[];
     const updatedUsers = users.map(u => u.id === user.id ? {...u, location} : u);
-    localStorage.setItem(MOCK_USERS_KEY, JSON.stringify(updatedUsers));
+    SecureStore.setItem(MOCK_USERS_KEY, JSON.stringify(updatedUsers));
     
     // Update state
     setUser(updatedUser);
