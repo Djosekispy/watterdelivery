@@ -1,21 +1,20 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
-import { Slot } from "expo-router"; // ou mantenha se estiver usando radix Slot
+import { Pressable, Text } from "react-native";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
-import { styled  } from "nativewind";
+// Removed styled import as it is not exported by nativewind
 
 const buttonVariants = cva(
-  "flex flex-row items-center justify-center gap-2 rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none",
+  "flex flex-row items-center justify-center rounded-md font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground",
-        destructive: "bg-red-600 text-white",
-        outline: "border border-gray-300 bg-white text-gray-800",
-        secondary: "bg-gray-200 text-gray-800",
-        ghost: "bg-transparent text-gray-700",
-        link: "text-blue-500 underline",
+        default: "bg-primary",
+        destructive: "bg-destructive",
+        outline: "border border-input bg-background",
+        secondary: "bg-secondary",
+        ghost: "bg-transparent",
+        link: "underline",
       },
       size: {
         default: "h-10 px-4 py-2",
@@ -31,41 +30,76 @@ const buttonVariants = cva(
   }
 );
 
+const textVariants = cva("text-center", {
+  variants: {
+    variant: {
+      default: "text-primary-foreground",
+      destructive: "text-destructive-foreground",
+      outline: "text-foreground",
+      secondary: "text-secondary-foreground",
+      ghost: "text-foreground",
+      link: "text-primary underline",
+    },
+  },
+  defaultVariants: {
+    variant: "default",
+  },
+});
+
 export interface ButtonProps
-  extends VariantProps<typeof buttonVariants> {
+  extends React.ComponentPropsWithoutRef<typeof Pressable>,
+    VariantProps<typeof buttonVariants> {
   asChild?: boolean;
-  onPress?: () => void;
-  children: React.ReactNode;
-  disabled?: boolean;
   className?: string;
+  textClassName?: string;
 }
 
-const StyledPressable = styled(Pressable);
-const StyledText = styled(Text);
+// Directly use Pressable and Text without wrapping
+const StyledPressable = Pressable;
+const StyledText = Text;
 
-export const Button = React.forwardRef<typeof Pressable, ButtonProps>(
-  ({ className, variant, size, asChild = false, children, onPress, disabled, ...props }, ref) => {
-    const classes = cn(buttonVariants({ variant, size, className }));
+const Button = React.forwardRef<React.ElementRef<typeof Pressable>, ButtonProps>(
+  (
+    {
+      className = "",
+      variant,
+      size,
+      asChild = false,
+      children,
+      textClassName = "",
+      ...props
+    },
+    ref
+  ) => {
+    const pressableClasses = cn(
+      buttonVariants({ variant, size }),
+      className // Merge user-provided className
+    );
+    const textClasses = cn(
+      textVariants({ variant }),
+      textClassName // Merge user-provided textClassName
+    );
 
     if (asChild) {
       return (
-        <Slot
-          className={classes}
+        <StyledPressable
+          ref={ref}
+          className={pressableClasses}
           {...props}
-        />
+        >
+          {children}
+        </StyledPressable>
       );
     }
 
     return (
       <StyledPressable
-        className={classes}
-        onPress={onPress}
-        disabled={disabled}
         ref={ref}
+        className={pressableClasses}
         {...props}
       >
         {typeof children === "string" ? (
-          <StyledText className="text-center">{children}</StyledText>
+          <StyledText className={textClasses}>{children}</StyledText>
         ) : (
           children
         )}
@@ -73,4 +107,7 @@ export const Button = React.forwardRef<typeof Pressable, ButtonProps>(
     );
   }
 );
+
 Button.displayName = "Button";
+
+export { Button, buttonVariants };

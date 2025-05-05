@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { User, Order, OrderStatus, Notification } from '@/types';
 import { useAuth } from './AuthContext';
+import * as SecureStore from 'expo-secure-store';
 
 // Tipo para localização geográfica
 type Location = {
@@ -30,21 +31,21 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const { user } = useAuth();
 
   const [orders, setOrders] = useState<Order[]>(() => {
-    const stored = localStorage.getItem('agua_expressa_orders');
+    const stored = SecureStore.getItem('agua_expressa_orders');
     return stored ? JSON.parse(stored) : [];
   });
 
   const [notifications, setNotifications] = useState<Notification[]>(() => {
-    const stored = localStorage.getItem('agua_expressa_notifications');
+    const stored = SecureStore.getItem('agua_expressa_notifications');
     return stored ? JSON.parse(stored) : [];
   });
 
-  const saveOrdersToLocalStorage = useCallback((newOrders: Order[]) => {
-    localStorage.setItem('agua_expressa_orders', JSON.stringify(newOrders));
+  const saveOrdersToSecureStore = useCallback((newOrders: Order[]) => {
+    SecureStore.setItem('agua_expressa_orders', JSON.stringify(newOrders));
   }, []);
 
-  const saveNotificationsToLocalStorage = useCallback((newNotifications: Notification[]) => {
-    localStorage.setItem('agua_expressa_notifications', JSON.stringify(newNotifications));
+  const saveNotificationsToSecureStore = useCallback((newNotifications: Notification[]) => {
+    SecureStore.setItem('agua_expressa_notifications', JSON.stringify(newNotifications));
   }, []);
 
   const getRecentOrders = useCallback(() => {
@@ -60,7 +61,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [orders]);
 
   const getNearbySuppliers = useCallback((userLocation: Location) => {
-    const usersJson = localStorage.getItem('agua_expressa_users') || '[]';
+    const usersJson = SecureStore.getItem('agua_expressa_users') || '[]';
     const users = JSON.parse(usersJson) as User[];
 
     const suppliers = users
@@ -91,10 +92,10 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const updatedOrders = [...orders, newOrder];
     setOrders(updatedOrders);
-    saveOrdersToLocalStorage(updatedOrders);
+    saveOrdersToSecureStore(updatedOrders);
 
     // Notificar fornecedores
-    const usersJson = localStorage.getItem('agua_expressa_users') || '[]';
+    const usersJson = SecureStore.getItem('agua_expressa_users') || '[]';
     const users = JSON.parse(usersJson) as User[];
     const suppliers = users.filter(u => u.userType === 'supplier');
 
@@ -110,8 +111,8 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const updatedNotifications = [...notifications, ...newNotifications];
     setNotifications(updatedNotifications);
-    saveNotificationsToLocalStorage(updatedNotifications);
-  }, [user, orders, notifications, saveOrdersToLocalStorage, saveNotificationsToLocalStorage]);
+    saveNotificationsToSecureStore(updatedNotifications);
+  }, [user, orders, notifications, saveOrdersToSecureStore, saveNotificationsToSecureStore]);
 
   const updateOrderStatus = useCallback(async (orderId: string, status: OrderStatus) => {
     const updatedOrders = orders.map(order =>
@@ -121,7 +122,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
 
     setOrders(updatedOrders);
-    saveOrdersToLocalStorage(updatedOrders);
+    saveOrdersToSecureStore(updatedOrders);
 
     const order = orders.find(o => o.id === orderId);
     if (order) {
@@ -137,9 +138,9 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       const updatedNotifications = [...notifications, notification];
       setNotifications(updatedNotifications);
-      saveNotificationsToLocalStorage(updatedNotifications);
+      saveNotificationsToSecureStore(updatedNotifications);
     }
-  }, [orders, notifications, saveOrdersToLocalStorage, saveNotificationsToLocalStorage]);
+  }, [orders, notifications, saveOrdersToSecureStore, saveNotificationsToSecureStore]);
 
   const acceptOrder = useCallback(async (orderId: string, supplierId: string) => {
     const updatedOrders = orders.map(order =>
@@ -149,7 +150,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
 
     setOrders(updatedOrders as any);
-    saveOrdersToLocalStorage(updatedOrders as any);
+    saveOrdersToSecureStore(updatedOrders as any);
 
     const order = orders.find(o => o.id === orderId);
     if (order) {
@@ -165,9 +166,9 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       const updatedNotifications = [...notifications, notification];
       setNotifications(updatedNotifications);
-      saveNotificationsToLocalStorage(updatedNotifications);
+      saveNotificationsToSecureStore(updatedNotifications);
     }
-  }, [orders, notifications, saveOrdersToLocalStorage, saveNotificationsToLocalStorage]);
+  }, [orders, notifications, saveOrdersToSecureStore, saveNotificationsToSecureStore]);
 
   const markNotificationAsRead = useCallback((notificationId: string) => {
     const updatedNotifications = notifications.map(notification =>
@@ -177,8 +178,8 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
 
     setNotifications(updatedNotifications);
-    saveNotificationsToLocalStorage(updatedNotifications);
-  }, [notifications, saveNotificationsToLocalStorage]);
+    saveNotificationsToSecureStore(updatedNotifications);
+  }, [notifications, saveNotificationsToSecureStore]);
 
   const unreadNotificationsCount = notifications.filter(n => !n.read && n.userId === user?.id).length;
 

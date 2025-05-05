@@ -1,18 +1,15 @@
+import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 import "../constants/global.css";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'react-native';
-import '@/constants/global.css';
-import { useAuth, AuthProvider } from '@/context/AuthContext';
-
-export {
-  ErrorBoundary,
-} from 'expo-router';
+import { AuthProvider } from '@/context/AuthContext';
+import { Stack } from 'expo-router';
+import { OrderProvider } from '@/context/OrderContext';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -38,26 +35,12 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <RootLayoutNav />
+        <OrderProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <StatusBar backgroundColor="transparent" translucent barStyle="dark-content" />
+        <Stack screenOptions={{ headerShown: false }} />
+      </GestureHandlerRootView>
+       </OrderProvider>
     </AuthProvider>
-  );
-}
-
-function RootLayoutNav() {
-  const { user } = useAuth();
-  return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      
-    <StatusBar backgroundColor='transparent' translucent barStyle='dark-content' />
-      <Stack screenOptions={{headerShown : false}}>
-      {user ? (
-        // Rotas de Usuario Autenticado
-          <Stack.Screen name="(home)" options={{ headerShown: false }} />
-        ) : (
-          // Rotas para Usuario Não Autenticado
-          <Stack.Screen name="(home)" options={{ headerShown: false }} />
-        )}
-      </Stack>
-  </GestureHandlerRootView>
   );
 }
