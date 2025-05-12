@@ -26,7 +26,7 @@ const ResetPasswordScreen = () => {
   };
 
   const handleBackToLogin = () => {
-    router.push('/(auth)/login');
+    router.push('/(auth)/');
   };
 
   return (
