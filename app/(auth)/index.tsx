@@ -24,6 +24,7 @@ const LoginScreen = () => {
 
   const handleForgotPassword = () => {
     // Navegar para tela de recuperação de senha
+     router.push('/(auth)/reset');
   };
 
   const handleSignUp = () => {

@@ -5,9 +5,10 @@ import { useNavigation } from '@react-navigation/native';
 import { ResetPasswordFormData } from '@/types/authSchemas';
 import { AuthTemplate } from '@/components/layout/AuthTemplate';
 import { ResetPasswordForm } from '@/components/screens/ResetPasswordForm';
+import { useRouter } from 'expo-router';
 
 const ResetPasswordScreen = () => {
-  const navigation = useNavigation();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -25,7 +26,7 @@ const ResetPasswordScreen = () => {
   };
 
   const handleBackToLogin = () => {
-    navigation.goBack();
+    router.push('/(auth)/login');
   };
 
   return (
@@ -37,17 +38,13 @@ const ResetPasswordScreen = () => {
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
       >
-        <AuthTemplate
-          title="Recuperação de Conta"
-          subtitle="Preencha os dados para redefinir sua senha"
-        >
+        
           <ResetPasswordForm 
             onSubmit={handleSubmit}
             loading={loading}
             onBackToLogin={handleBackToLogin}
             success={success}
           />
-        </AuthTemplate>
       </ScrollView>
     </KeyboardAvoidingView>
   );

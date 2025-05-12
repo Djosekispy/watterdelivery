@@ -7,11 +7,12 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { ResetPasswordFormData, resetPasswordSchema } from '@/types/authSchemas';
 import { Button } from '../ui/Button';
 import { FormInput } from '../layout/FormInput';
+import resetPhoto from '@/assets/images/reset.png'
 
 interface ResetPasswordFormProps {
   onSubmit: (data: ResetPasswordFormData) => void;
   loading?: boolean;
-  onBackToLogin?: () => void;
+  onBackToLogin: () => void;
   success?: boolean;
 }
 
@@ -31,7 +32,7 @@ export const ResetPasswordForm = ({
 
   if (success) {
     return (
-      <View className="items-center justify-center p-6">
+      <View className="flex-1  items-center justify-center p-6">
         <View className="bg-green-100 p-4 rounded-full mb-6">
           <MaterialCommunityIcons name="check-circle" size={48} color="#10B981" />
         </View>
@@ -47,7 +48,7 @@ export const ResetPasswordForm = ({
 
         <Button
           title="Voltar para login"
-          onPress={() => onBackToLogin}
+          onPress={onBackToLogin}
           variant="outline"
           className="w-full"
         />
@@ -56,10 +57,10 @@ export const ResetPasswordForm = ({
   }
 
   return (
-    <View className="w-full">
+    <View className="flex-1 justify-center p-6">
       <View className="items-center mb-8">
-        <Image 
-          source={require('../../../assets/images/reset-password.png')} 
+        <Image
+          source={resetPhoto}
           className="w-48 h-48 mb-4"
         />
         <Text className="text-2xl font-bold text-gray-900 mb-2 text-center">
