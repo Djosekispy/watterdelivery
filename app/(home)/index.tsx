@@ -5,11 +5,13 @@ import { useAuth } from '@/context/AuthContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
+import ProfileModal from '@/components/screens/ProfileModal';
+import MapsAnimation from '@/components/ui/location-search';
 
 interface MenuOption {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
   label: string;
-  route: string;
+  action: ()=>void;
 }
 
 const HomeScreen = () => {
@@ -19,6 +21,7 @@ const HomeScreen = () => {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [Showprofile, setShowProfile ] = useState<boolean>(false)
 
   useEffect(() => {
     const getLocation = async () => {
@@ -47,16 +50,17 @@ const HomeScreen = () => {
   }, []);
 
   const menuOptions: MenuOption[] = [
-    { icon: 'account', label: 'Perfil', route: '/profile' },
-    { icon: 'history', label: 'Histórico', route: '/history' },
-    { icon: 'cart', label: 'Pedidos', route: '/orders' },
-    { icon: 'cog', label: 'Configurações', route: '/settings' },
-     { icon: 'login', label: 'entrar', route: '/login' },
-     { icon: 'logout', label: 'sair', route: '/logout' },
+    { icon: 'account', label: 'Perfil', action: ()=>{setShowProfile(true)} },
+    { icon: 'history', label: 'Histórico', action: ()=>{setShowProfile(true)} },
+    { icon: 'cart', label: 'Pedidos', action: ()=>{setShowProfile(true)} },
+    { icon: 'cog', label: 'Configurações', action: ()=>{setShowProfile(true)} },
+     { icon: 'login', label: 'entrar', action: ()=>{setShowProfile(true)} },
+     { icon: 'logout', label: 'sair', action: ()=>{setShowProfile(true)} },
   ];
 
   return (
     <View className="flex-1">
+      <ProfileModal visible={Showprofile} onClose={()=>setShowProfile(false)}  />
       {errorMsg && (
         <View className="absolute top-6 z-50 w-full px-4">
           <Text className="bg-red-500 text-white p-4 rounded-lg text-center">
@@ -66,9 +70,7 @@ const HomeScreen = () => {
       )}
 
       {loading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#0066CC" />
-        </View>
+          <MapsAnimation />
       ) : (
         location && (
           <MapView
@@ -120,6 +122,7 @@ const HomeScreen = () => {
                 className="flex-row items-center py-4 border-b border-gray-200"
                 onPress={() => {
                   setMenuVisible(false);
+                  option.action();
                  // router.push(option.route);
                 }}
               >
