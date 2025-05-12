@@ -6,6 +6,7 @@ import ProfileModal from '@/components/screens/ProfileModal';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import MapsAnimation from '@/components/ui/location-search';
 import { LocationContext } from '@/context/LocationContext';
+import SettingsModal from '@/components/screens/settings';
 
 interface MenuOption {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
@@ -16,6 +17,7 @@ interface MenuOption {
 const HomeScreen = () => {
   const { user } = useAuth();
   const mapRef = useRef<MapView>(null);
+  const [showSettings, setShowSettings] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const { location, errorMsg, loading } = useContext(LocationContext);
   const [Showprofile, setShowProfile] = useState<boolean>(false);
@@ -25,9 +27,8 @@ const HomeScreen = () => {
     { icon: 'account', label: 'Perfil', action: () => { setShowProfile(true) } },
     { icon: 'history', label: 'Histórico', action: () => { setShowProfile(true) } },
     { icon: 'cart', label: 'Pedidos', action: () => { setShowProfile(true) } },
-    { icon: 'cog', label: 'Configurações', action: () => { setShowProfile(true) } },
+    { icon: 'cog', label: 'Configurações', action: () => setShowSettings(true) },
     { icon: 'login', label: 'entrar', action: () => { setShowProfile(true) } },
-    { icon: 'logout', label: 'sair', action: () => { setShowProfile(true) } },
   ];
 
   const handleMapLayout = () => {
@@ -37,6 +38,10 @@ const HomeScreen = () => {
   return (
     <View className="flex-1">
       <ProfileModal visible={Showprofile} onClose={()=>setShowProfile(false)} />
+        <SettingsModal 
+  visible={showSettings} 
+  onClose={() => setShowSettings(false)} 
+/>
       {loading ? (
         <MapsAnimation />
       ) : (
