@@ -5954,6 +5954,11 @@ expo-manifests@~0.14.0:
     "@expo/config" "~9.0.0"
     expo-json-utils "~0.13.0"
 
+expo-maps@^0.10.0:
+  version "0.10.0"
+  resolved "https://registry.yarnpkg.com/expo-maps/-/expo-maps-0.10.0.tgz#0570be23876920db536081ffc3a4e78f13673c15"
+  integrity sha512-cnd37HjoD3irxwv0II1T8IerGRG8RM9i18po/TXfuHsPp/dDWmLV6xdPPbn4yrR/81ZA5z0pAWyxVfaiEHOcQA==
+
 expo-modules-autolinking@1.11.3:
   version "1.11.3"
   resolved "https://registry.npmjs.org/expo-modules-autolinking/-/expo-modules-autolinking-1.11.3.tgz"

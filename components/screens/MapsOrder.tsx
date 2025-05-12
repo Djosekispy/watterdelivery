@@ -9,22 +9,7 @@ interface LocationMapProps {
   loading: boolean;
 }
 
-const LocationMap: React.FC<LocationMapProps> = ({ location, errorMsg, loading }) => {
-  if (loading) {
-    return (
-      <View className="flex-1 items-center justify-center">
-        <Text>Carregando mapa...</Text>
-      </View>
-    );
-  }
-
-  if (errorMsg) {
-    return (
-      <View className="flex-1 items-center justify-center">
-        <Text className="text-red-500">{errorMsg}</Text>
-      </View>
-    );
-  }
+const OrderMap: React.FC<LocationMapProps> = ({ location, errorMsg, loading }) => {
 
   if (!location) {
     return (
@@ -59,4 +44,4 @@ const LocationMap: React.FC<LocationMapProps> = ({ location, errorMsg, loading }
   );
 };
 
-export default LocationMap;
+export default OrderMap;

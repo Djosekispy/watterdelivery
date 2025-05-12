@@ -1,88 +1,52 @@
-import React, { useEffect, useState } from 'react';
-import { View, TouchableOpacity, Modal, Text, Alert } from 'react-native';
+import React, { useContext, useEffect, useRef, useState } from 'react';
+import { View, TouchableOpacity, Modal, Text, Alert, StyleSheet } from 'react-native';
 import { useAuth } from '@/context/AuthContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import * as Location from 'expo-location';
 import ProfileModal from '@/components/screens/ProfileModal';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import MapsAnimation from '@/components/ui/location-search';
-
+import { LocationContext } from '@/context/LocationContext';
 
 interface MenuOption {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
   label: string;
-  action: ()=>void;
+  action: () => void;
 }
 
 const HomeScreen = () => {
-   const { user } = useAuth();
+  const { user } = useAuth();
+  const mapRef = useRef<MapView>(null);
   const [menuVisible, setMenuVisible] = useState(false);
-  const [location, setLocation] = useState<Location.LocationObject | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { location, errorMsg, loading } = useContext(LocationContext);
   const [Showprofile, setShowProfile] = useState<boolean>(false);
-
-
- useEffect(() => {
-    let isMounted = true;
-
-    const getLocation = async () => {
-      try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-          if (isMounted) {
-            setErrorMsg('Permissão para acessar a localização foi negada');
-            Alert.alert(
-              'Permissão Necessária',
-              'Precisamos da sua localização para mostrar os estabelecimentos próximos.'
-            );
-            setLoading(false);
-          }
-          return;
-        }
-
-        const currentLocation = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        });
-
-        if (isMounted) {
-          setLocation(currentLocation);
-          setLoading(false);
-        }
-      } catch (error) {
-        if (isMounted) {
-          setErrorMsg('Erro ao obter localização');
-          console.error('Location error:', error);
-          setLoading(false);
-        }
-      }
-    };
-
-    getLocation();
-    return () => { isMounted = false; };
-  }, [])
+  const [mapReady, setMapReady] = useState(false);
 
   const menuOptions: MenuOption[] = [
-    { icon: 'account', label: 'Perfil', action: ()=>{setShowProfile(true)} },
-    { icon: 'history', label: 'Histórico', action: ()=>{setShowProfile(true)} },
-    { icon: 'cart', label: 'Pedidos', action: ()=>{setShowProfile(true)} },
-    { icon: 'cog', label: 'Configurações', action: ()=>{setShowProfile(true)} },
-    { icon: 'login', label: 'entrar', action: ()=>{setShowProfile(true)} },
-    { icon: 'logout', label: 'sair', action: ()=>{setShowProfile(true)} },
+    { icon: 'account', label: 'Perfil', action: () => { setShowProfile(true) } },
+    { icon: 'history', label: 'Histórico', action: () => { setShowProfile(true) } },
+    { icon: 'cart', label: 'Pedidos', action: () => { setShowProfile(true) } },
+    { icon: 'cog', label: 'Configurações', action: () => { setShowProfile(true) } },
+    { icon: 'login', label: 'entrar', action: () => { setShowProfile(true) } },
+    { icon: 'logout', label: 'sair', action: () => { setShowProfile(true) } },
   ];
+
+  const handleMapLayout = () => {
+    setMapReady(true);
+  };
 
   return (
     <View className="flex-1">
       <ProfileModal visible={Showprofile} onClose={()=>setShowProfile(false)} />
-      
       {loading ? (
         <MapsAnimation />
       ) : (
         <View className="flex-1">
           {location && (
             <MapView
+            ref={mapRef}
+            mapType='satellite'
               provider={PROVIDER_GOOGLE}
-              className="flex-1"
+              style={{...StyleSheet.absoluteFillObject }}
               initialRegion={{
                 latitude: location.coords.latitude,
                 longitude: location.coords.longitude,

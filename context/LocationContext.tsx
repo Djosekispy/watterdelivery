@@ -5,6 +5,7 @@ import React, { Children, createContext, ReactNode, useEffect, useState } from '
 interface LocationContextProps {
     location: Location.LocationObject | null;
     errorMsg: string | null;
+    loading: boolean;
 }
 
 interface LocationProviderProps {
@@ -14,42 +15,57 @@ interface LocationProviderProps {
 export const LocationContext = createContext<LocationContextProps>({
     location: null,
     errorMsg: null,
+    loading: true,
 });
 
 export const LocationProvider: React.FC<LocationProviderProps> = ({ children }) => {
     const [location, setLocation] = useState<Location.LocationObject | null>(null);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
+    const [loading, setLoading] = useState(true);   
+  
     useEffect(() => {
-        (async () => {
-            // Verifica a permissão para acessar a localização
+    (async () => {
+        setLoading(true);
+        try {
             let { status } = await Location.requestForegroundPermissionsAsync();
             if (status !== 'granted') {
                 setErrorMsg('Permissão para acessar a localização foi negada.');
+                setLoading(false);
                 return;
             }
 
-            //Obtém a localização em tempo real
+            // Primeiro obtém a localização atual
+            const currentLocation = await Location.getCurrentPositionAsync({
+                accuracy: Location.Accuracy.High
+            });
+            setLocation(currentLocation);
+
+            // Depois inicia o watch
             const locationSubscription = await Location.watchPositionAsync(
                 {
                     accuracy: Location.Accuracy.High,
-                    timeInterval: 1000,
-                    distanceInterval:3
+                    timeInterval: 10000, // Aumente o intervalo para economizar bateria
+                    distanceInterval: 10
                 }, 
-                (newLocation) =>{
+                (newLocation) => {
                     setLocation(newLocation);
                 }
             );
 
-            // Limpiza ao desmontar o componente
-            return ()=>{
+            setLoading(false);
+
+            return () => {
                 locationSubscription.remove();
             };
-        })();
-    }, []);
+        } catch (error) {
+            setErrorMsg('Erro ao obter localização');
+            setLoading(false);
+        }
+    })();
+}, []);
 
     return (
-        <LocationContext.Provider value={{location, errorMsg}}>
+        <LocationContext.Provider value={{location, errorMsg, loading}}>
             {children}
         </LocationContext.Provider>
     )

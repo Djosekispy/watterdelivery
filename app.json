@@ -52,6 +52,13 @@
           "locationWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location while using the app."
       }
       ],
+       [
+        "expo-maps",
+        {
+          "requestLocationPermission": "true",
+          "locationPermission": "Allow $(PRODUCT_NAME) to use your location"
+        }
+      ],
      [
       "expo-secure-store",
       {
