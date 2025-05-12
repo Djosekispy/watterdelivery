@@ -121,6 +121,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         id: Date.now().toString(),
         name: userData.name || '',
         email: userData.email || '',
+        photo : 'https://cdn3.iconfinder.com/data/icons/business-avatar-1/512/3_avatar-512.png',
         userType: userData.userType || 'consumer',
         ...(userData.userType === 'supplier' && { pricePerLiter: userData.pricePerLiter || 0 }),
         ...userData

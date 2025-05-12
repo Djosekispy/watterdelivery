@@ -4,6 +4,7 @@ export type UserType = 'consumer' | 'supplier';
 export interface User {
   id: string;
   name: string;
+  photo : string;
   email: string;
   userType: UserType;
   location?: {

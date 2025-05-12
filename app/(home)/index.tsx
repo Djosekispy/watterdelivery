@@ -51,6 +51,8 @@ const HomeScreen = () => {
     { icon: 'history', label: 'Histórico', route: '/history' },
     { icon: 'cart', label: 'Pedidos', route: '/orders' },
     { icon: 'cog', label: 'Configurações', route: '/settings' },
+     { icon: 'login', label: 'entrar', route: '/login' },
+     { icon: 'logout', label: 'sair', route: '/logout' },
   ];
 
   return (
@@ -70,6 +72,7 @@ const HomeScreen = () => {
       ) : (
         location && (
           <MapView
+          mapType='standard'
             style={{ flex: 1 }}
             initialRegion={{
               latitude: location.coords.latitude,
