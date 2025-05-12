@@ -35,7 +35,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose }) => {
           <MaterialCommunityIcons name="camera" size={20} color="white" />
         </View>
       </View>
-      <View>
+      <View style={{ marginLeft: 16 }}>
   <Text style={styles.userName}>
         {user?.name || user?.name || 'Usuário'}
       </Text>
