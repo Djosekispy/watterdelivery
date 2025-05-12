@@ -7,6 +7,7 @@ import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import MapsAnimation from '@/components/ui/location-search';
 import { LocationContext } from '@/context/LocationContext';
 import SettingsModal from '@/components/screens/settings';
+import { useRouter } from 'expo-router';
 
 interface MenuOption {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
@@ -17,6 +18,7 @@ interface MenuOption {
 const HomeScreen = () => {
   const { user } = useAuth();
   const mapRef = useRef<MapView>(null);
+  const router = useRouter();
   const [showSettings, setShowSettings] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const { location, errorMsg, loading } = useContext(LocationContext);
@@ -28,7 +30,7 @@ const HomeScreen = () => {
     { icon: 'history', label: 'Histórico', action: () => { setShowProfile(true) } },
     { icon: 'cart', label: 'Pedidos', action: () => { setShowProfile(true) } },
     { icon: 'cog', label: 'Configurações', action: () => setShowSettings(true) },
-    { icon: 'login', label: 'entrar', action: () => { setShowProfile(true) } },
+    { icon: 'login', label: 'entrar', action: () => router.replace('/(auth)/')  },
   ];
 
   const handleMapLayout = () => {
