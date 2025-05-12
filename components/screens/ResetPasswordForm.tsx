@@ -2,12 +2,11 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { View, TouchableOpacity, Image } from 'react-native';
-import { Button } from '../../atoms/Button';
-import { FormInput } from '../../molecules/FormInput';
-import { Text } from '../../atoms/Text';
-import { resetPasswordSchema, ResetPasswordFormData } from '../../../validations/authSchemas';
+import { View, TouchableOpacity, Image, Text } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { ResetPasswordFormData, resetPasswordSchema } from '@/types/authSchemas';
+import { Button } from '../ui/Button';
+import { FormInput } from '../layout/FormInput';
 
 interface ResetPasswordFormProps {
   onSubmit: (data: ResetPasswordFormData) => void;
@@ -45,10 +44,10 @@ export const ResetPasswordForm = ({
           Enviamos um link para redefinir sua senha para o e-mail informado.
           Verifique sua caixa de entrada.
         </Text>
-        
-        <Button 
-          title="Voltar para login" 
-          onPress={onBackToLogin}
+
+        <Button
+          title="Voltar para login"
+          onPress={() => onBackToLogin}
           variant="outline"
           className="w-full"
         />
