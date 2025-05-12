@@ -10,6 +10,7 @@ import { StatusBar } from 'react-native';
 import { AuthProvider } from '@/context/AuthContext';
 import { Stack } from 'expo-router';
 import { OrderProvider } from '@/context/OrderContext';
+import { LocationProvider } from '@/context/LocationContext';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -35,12 +36,14 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
+      <LocationProvider>
         <OrderProvider>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <StatusBar backgroundColor="transparent" translucent barStyle="dark-content" />
         <Stack screenOptions={{ headerShown: false }} />
       </GestureHandlerRootView>
        </OrderProvider>
+       </LocationProvider>
     </AuthProvider>
   );
 }

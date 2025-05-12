@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, TouchableOpacity, Modal, Text, ActivityIndicator } from 'react-native';
-import { useRouter } from 'expo-router';
+import { View, TouchableOpacity, Modal, Text, Alert } from 'react-native';
 import { useAuth } from '@/context/AuthContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import ProfileModal from '@/components/screens/ProfileModal';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import MapsAnimation from '@/components/ui/location-search';
+
 
 interface MenuOption {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
@@ -15,86 +15,95 @@ interface MenuOption {
 }
 
 const HomeScreen = () => {
-  const { user } = useAuth();
-  const router = useRouter();
+   const { user } = useAuth();
   const [menuVisible, setMenuVisible] = useState(false);
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [Showprofile, setShowProfile ] = useState<boolean>(false)
+  const [Showprofile, setShowProfile] = useState<boolean>(false);
 
-  useEffect(() => {
+
+ useEffect(() => {
+    let isMounted = true;
+
     const getLocation = async () => {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
-          setErrorMsg('Permissão para acessar a localização foi negada');
-          setLoading(false);
+          if (isMounted) {
+            setErrorMsg('Permissão para acessar a localização foi negada');
+            Alert.alert(
+              'Permissão Necessária',
+              'Precisamos da sua localização para mostrar os estabelecimentos próximos.'
+            );
+            setLoading(false);
+          }
           return;
         }
 
         const currentLocation = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.High,
+          accuracy: Location.Accuracy.Balanced,
         });
 
-        setLocation(currentLocation);
+        if (isMounted) {
+          setLocation(currentLocation);
+          setLoading(false);
+        }
       } catch (error) {
-        setErrorMsg('Erro ao obter localização');
-        console.error(error);
-      } finally {
-        setLoading(false);
+        if (isMounted) {
+          setErrorMsg('Erro ao obter localização');
+          console.error('Location error:', error);
+          setLoading(false);
+        }
       }
     };
 
     getLocation();
-  }, []);
+    return () => { isMounted = false; };
+  }, [])
 
   const menuOptions: MenuOption[] = [
     { icon: 'account', label: 'Perfil', action: ()=>{setShowProfile(true)} },
     { icon: 'history', label: 'Histórico', action: ()=>{setShowProfile(true)} },
     { icon: 'cart', label: 'Pedidos', action: ()=>{setShowProfile(true)} },
     { icon: 'cog', label: 'Configurações', action: ()=>{setShowProfile(true)} },
-     { icon: 'login', label: 'entrar', action: ()=>{setShowProfile(true)} },
-     { icon: 'logout', label: 'sair', action: ()=>{setShowProfile(true)} },
+    { icon: 'login', label: 'entrar', action: ()=>{setShowProfile(true)} },
+    { icon: 'logout', label: 'sair', action: ()=>{setShowProfile(true)} },
   ];
 
   return (
     <View className="flex-1">
-      <ProfileModal visible={Showprofile} onClose={()=>setShowProfile(false)}  />
-      {errorMsg && (
-        <View className="absolute top-6 z-50 w-full px-4">
-          <Text className="bg-red-500 text-white p-4 rounded-lg text-center">
-            {errorMsg}
-          </Text>
-        </View>
-      )}
-
+      <ProfileModal visible={Showprofile} onClose={()=>setShowProfile(false)} />
+      
       {loading ? (
-          <MapsAnimation />
+        <MapsAnimation />
       ) : (
-        location && (
-          <MapView
-          mapType='standard'
-            style={{ flex: 1 }}
-            initialRegion={{
-              latitude: location.coords.latitude,
-              longitude: location.coords.longitude,
-              latitudeDelta: 0.005,
-              longitudeDelta: 0.005,
-            }}
-            showsUserLocation
-            showsMyLocationButton
-          >
-            <Marker
-              coordinate={{
+        <View className="flex-1">
+          {location && (
+            <MapView
+              provider={PROVIDER_GOOGLE}
+              className="flex-1"
+              initialRegion={{
                 latitude: location.coords.latitude,
                 longitude: location.coords.longitude,
+                latitudeDelta: 0.005,
+                longitudeDelta: 0.005,
               }}
-              title="Sua localização"
-              description="Você está aqui"
-            />
-          </MapView>
-        )
+              showsUserLocation
+              showsMyLocationButton
+            >
+              <Marker
+                key="userLocation"
+                coordinate={{
+                  latitude: location.coords.latitude,
+                  longitude: location.coords.longitude,
+                }}
+                title="Sua localização"
+                description="Você está aqui"
+              />
+            </MapView>
+          )}
+        </View>
       )}
 
       <TouchableOpacity
@@ -123,7 +132,6 @@ const HomeScreen = () => {
                 onPress={() => {
                   setMenuVisible(false);
                   option.action();
-                 // router.push(option.route);
                 }}
               >
                 <MaterialCommunityIcons

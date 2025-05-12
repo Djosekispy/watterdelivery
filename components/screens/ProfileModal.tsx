@@ -7,7 +7,6 @@ import {
   ScrollView,
   StatusBar,
   Platform,
-  StyleSheet,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
@@ -24,26 +23,26 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose }) => {
   const defaultImage = 'https://cdn3.iconfinder.com/data/icons/business-avatar-1/512/3_avatar-512.png';
 
   const ProfileSection = () => (
-    <View style={styles.profileSection}>
-      <View style={styles.avatarContainer}>
+    <View className="flex-row items-center mb-6 px-4 mx-4">
+      <View className="relative mr-4">
         <Image
-          source={user?.photo || defaultImage}
-          style={styles.avatar}
+          source={defaultImage}
+         style={{ width: 96, height: 96 }} 
+          className="rounded-full bg-gray-200" 
           contentFit="cover"
         />
-        <View style={styles.cameraIcon}>
-          <MaterialCommunityIcons name="camera" size={20} color="white" />
+        <View className="absolute bottom-0 right-0 bg-blue-500 p-1.5 rounded-full border-2 border-white">
+          <MaterialCommunityIcons name="camera" size={16} color="white" />
         </View>
       </View>
-      <View style={{ marginLeft: 16 }}>
-  <Text style={styles.userName}>
-        {user?.name || user?.name || 'Usuário'}
-      </Text>
-      <Text style={styles.userEmail}>
-        {user?.email || 'email@exemplo.com'}
-      </Text>
-        </View>
-    
+      <View>
+        <Text className="text-xl font-bold text-gray-800">
+          {user?.name || 'Usuário'}
+        </Text>
+        <Text className="text-sm text-gray-500 mt-1">
+          {user?.email || 'email@exemplo.com'}
+        </Text>
+      </View>
     </View>
   );
 
@@ -56,11 +55,11 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose }) => {
     label: string;
     value: string;
   }) => (
-    <View style={styles.infoItem}>
+    <View className="flex-row items-center p-4 bg-gray-50 rounded-xl mb-3">
       <MaterialCommunityIcons name={icon} size={24} color="#3B82F6" />
-      <View style={styles.infoTextContainer}>
-        <Text style={styles.infoLabel}>{label}</Text>
-        <Text style={styles.infoValue}>{value}</Text>
+      <View className="ml-3">
+        <Text className="text-xs text-gray-500">{label}</Text>
+        <Text className="text-base text-gray-800 font-medium">{value}</Text>
       </View>
     </View>
   );
@@ -77,11 +76,18 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose }) => {
     onPress: () => void;
   }) => (
     <TouchableOpacity
-      style={[styles.actionButton, { backgroundColor: color }]}
+      className={`flex-1 mx-2 p-4 rounded-xl flex-row items-center justify-center ${color}`}
       onPress={onPress}
+      style={{
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+      }}
     >
       <MaterialCommunityIcons name={icon} size={20} color="white" />
-      <Text style={styles.actionButtonText}>{label}</Text>
+      <Text className="text-white font-semibold ml-2">{label}</Text>
     </TouchableOpacity>
   );
 
@@ -94,25 +100,25 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose }) => {
       statusBarTranslucent
     >
       <TouchableOpacity 
-        style={styles.modalOverlay} 
+        className="flex-1 bg-black/50 justify-end" 
         activeOpacity={1} 
         onPress={onClose}
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.dragHandle} />
+        <View className={`bg-white rounded-t-3xl ${Platform.OS === 'ios' ? 'pb-8' : 'pb-4'}`}>
+          <View className="w-12 h-1 bg-gray-300 rounded-full mx-auto mt-3 mb-4" />
           
           <ScrollView 
-            contentContainerStyle={styles.scrollContent}
+            className="px-4"
             showsVerticalScrollIndicator={false}
           >
-            <View style={styles.contentContainer}>
+            <View className="max-w-md w-full self-center">
               <ProfileSection />
 
-              <View style={styles.infoSection}>
+              <View className="mb-6">
                 <InfoItem
                   icon="phone"
                   label="Telefone"
-                  value={ user?.phone || 'Adicionar número'}
+                  value={user?.phone || 'Adicionar número'}
                 />
                 <InfoItem
                   icon="map-marker"
@@ -126,11 +132,11 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose }) => {
                 />
               </View>
 
-              <View style={styles.actionsRow}>
+              <View className="flex-row mb-6">
                 <ActionButton
                   icon="account-edit"
                   label="Editar Perfil"
-                  color="#3B82F6"
+                  color="bg-blue-500"
                   onPress={() => {
                     onClose();
                     // Navegar para editar perfil
@@ -138,8 +144,8 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose }) => {
                 />
                 <ActionButton
                   icon="map-marker-plus"
-                  label="Endereços"
-                  color="#10B981"
+                  label="Gerenciar Endereços"
+                  color="bg-green-500"
                   onPress={() => {
                     onClose();
                     // Navegar para editar endereços
@@ -153,121 +159,5 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose }) => {
     </Modal>
   );
 };
-
-const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContainer: {
-    backgroundColor: 'white',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingBottom: Platform.OS === 'ios' ? 34 : 24,
-    maxHeight: '85%',
-  },
-  dragHandle: {
-    width: 40,
-    height: 4,
-    backgroundColor: '#E5E7EB',
-    borderRadius: 2,
-    alignSelf: 'center',
-    marginTop: 12,
-    marginBottom: 8,
-  },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 20,
-  },
-  contentContainer: {
-    maxWidth: 500,
-    width: '100%',
-    alignSelf: 'center',
-  },
-  profileSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  avatarContainer: {
-    position: 'relative',
-    marginBottom: 4,
-  },
-  avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 60,
-    backgroundColor: '#F3F4F6',
-  },
-  cameraIcon: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: '#3B82F6',
-    padding: 8,
-    borderRadius: 20,
-    borderWidth: 2,
-    borderColor: 'white',
-  },
-  userName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#111827',
-    marginBottom: 4,
-  },
-  userEmail: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  infoSection: {
-    marginBottom: 32,
-  },
-  infoItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#F9FAFB',
-    borderRadius: 12,
-    marginBottom: 12,
-  },
-  infoTextContainer: {
-    marginLeft: 12,
-  },
-  infoLabel: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  infoValue: {
-    fontSize: 16,
-    color: '#111827',
-    fontWeight: '500',
-    marginTop: 4,
-  },
-  actionsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  actionButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  actionButtonText: {
-    color: 'white',
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-});
 
 export default ProfileModal;
