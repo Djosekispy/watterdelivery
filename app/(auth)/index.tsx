@@ -4,10 +4,12 @@ import { useAuth } from '../../context/AuthContext';
 import { AuthTemplate } from '@/components/layout/AuthTemplate';
 import { LoginForm } from '@/components/screens/LoginForm';
 import { SocialLogin } from '@/components/ui/SocialLogin';
+import { useRouter } from 'expo-router';
 
 const LoginScreen = () => {
   const { login } = useAuth();
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const handleLogin = async ({ email, password }: { email: string; password: string }) => {
     try {
@@ -26,6 +28,7 @@ const LoginScreen = () => {
 
   const handleSignUp = () => {
     // Navegar para tela de cadastro
+    router.push('/(auth)/register');
   };
 
   return (
