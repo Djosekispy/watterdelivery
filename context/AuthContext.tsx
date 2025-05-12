@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserType } from '@/types';
 import { toast } from "sonner";
 import * as SecureStore from 'expo-secure-store';
+import { useRouter } from 'expo-router';
 
 interface AuthContextType {
   user: User | null;
@@ -22,7 +23,7 @@ const CURRENT_USER_KEY = 'agua_expressa_current_user';
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
+   const router = useRouter();
   // Initialize mock data if needed
   useEffect(() => {
     // Load users from SecureStore or initialize with empty array
@@ -67,6 +68,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(JSON.parse(savedUser));
     }
     setIsLoading(false);
+
+  if(!user){
+    router.push('/(home)/');
+  }
   }, []);
 
   const login = async (email: string, password: string) => {

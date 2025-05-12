@@ -51,7 +51,7 @@ const HomeScreen = () => {
           {location && (
             <MapView
             ref={mapRef}
-            mapType='satellite'
+            googleRenderer='LATEST'
               provider={PROVIDER_GOOGLE}
               style={{...StyleSheet.absoluteFillObject }}
               initialRegion={{
