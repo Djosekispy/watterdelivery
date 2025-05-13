@@ -1,13 +1,38 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { View, TouchableOpacity, Modal, Text, Alert, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, Modal, Text, StyleSheet, Platform } from 'react-native';
 import { useAuth } from '@/context/AuthContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import ProfileModal from '@/components/screens/ProfileModal';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
-import MapsAnimation from '@/components/ui/location-search';
+import MapView, { MapType, Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { LocationContext } from '@/context/LocationContext';
-import SettingsModal from '@/components/screens/settings';
 import { useRouter } from 'expo-router';
+import DropDownPicker from 'react-native-dropdown-picker';
+import SettingsModal from '@/components/screens/settings';
+import ProfileModal from '@/components/screens/ProfileModal';
+import MapsAnimation from '@/components/ui/location-search';
+
+// Adicione no seu arquivo de estilos ou no componente
+const styles = StyleSheet.create({
+  dropdownContainer: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 50 : 20,
+    left: 16,
+    zIndex: 1000,
+    width: 160,
+  },
+  dropdown: {
+    backgroundColor: 'white',
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  dropdownItem: {
+    justifyContent: 'flex-start',
+  },
+  dropdownLabel: {
+    fontSize: 14,
+    color: '#374151',
+  },
+});
 
 interface MenuOption {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
@@ -19,18 +44,26 @@ const HomeScreen = () => {
   const { user } = useAuth();
   const mapRef = useRef<MapView>(null);
   const router = useRouter();
+  const [mapType, setMapType] = useState<MapType>('standard');
   const [showSettings, setShowSettings] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const { location, errorMsg, loading } = useContext(LocationContext);
-  const [Showprofile, setShowProfile] = useState<boolean>(false);
+  const [showProfile, setShowProfile] = useState(false);
   const [mapReady, setMapReady] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [items, setItems] = useState([
+    {label: 'Padrão', value: 'standard', icon: () => <MaterialCommunityIcons name="map-outline" size={20} color="#3B82F6" />},
+    {label: 'Satélite', value: 'satellite', icon: () => <MaterialCommunityIcons name="satellite-variant" size={20} color="#3B82F6" />},
+    {label: 'Híbrido', value: 'hybrid', icon: () => <MaterialCommunityIcons name="layers" size={20} color="#3B82F6" />},
+    {label: 'Terreno', value: 'terrain', icon: () => <MaterialCommunityIcons name="terrain" size={20} color="#3B82F6" />},
+  ]);
 
   const menuOptions: MenuOption[] = [
-    { icon: 'account', label: 'Perfil', action: () => { setShowProfile(true) } },
-    { icon: 'history', label: 'Histórico', action: () => { setShowProfile(true) } },
-    { icon: 'cart', label: 'Pedidos', action: () => { setShowProfile(true) } },
+    { icon: 'account', label: 'Perfil', action: () => setShowProfile(true) },
+    { icon: 'history', label: 'Histórico', action: () => setShowProfile(true) },
+    { icon: 'cart', label: 'Pedidos', action: () => setShowProfile(true) },
     { icon: 'cog', label: 'Configurações', action: () => setShowSettings(true) },
-    { icon: 'login', label: 'entrar', action: () => router.replace('/(auth)/')  },
+    { icon: 'login', label: 'entrar', action: () => router.replace('/(auth)/') },
   ];
 
   const handleMapLayout = () => {
@@ -39,21 +72,54 @@ const HomeScreen = () => {
 
   return (
     <View className="flex-1">
-      <ProfileModal visible={Showprofile} onClose={()=>setShowProfile(false)} />
-        <SettingsModal 
-  visible={showSettings} 
-  onClose={() => setShowSettings(false)} 
-/>
+      <ProfileModal visible={showProfile} onClose={() => setShowProfile(false)} />
+      <SettingsModal visible={showSettings} onClose={() => setShowSettings(false)} />
+
+      {/* Dropdown para seleção do tipo de mapa */}
+      <View style={styles.dropdownContainer}>
+        <DropDownPicker
+          open={open}
+          value={mapType}
+          items={items}
+          setOpen={setOpen}
+          setValue={setMapType}
+          setItems={setItems}
+          placeholder="Tipo de mapa"
+          placeholderStyle={{color: '#9CA3AF'}}
+          style={styles.dropdown}
+          dropDownContainerStyle={{
+            backgroundColor: 'white',
+            borderColor: '#E5E7EB',
+            borderRadius: 12,
+            marginTop: 4,
+          }}
+          itemStyle={styles.dropdownItem}
+          labelStyle={styles.dropdownLabel}
+          textStyle={{fontSize: 14}}
+          showArrowIcon={true}
+          showTickIcon={true}
+          listItemLabelStyle={{color: '#374151'}}
+          selectedItemLabelStyle={{color: '#3B82F6', fontWeight: '600'}}
+          selectedItemContainerStyle={{backgroundColor: '#EFF6FF'}}
+          modalProps={{
+            animationType: 'fade',
+          }}
+          modalTitle="Selecione o tipo de mapa"
+          modalTitleStyle={{color: '#111827', fontWeight: '600'}}
+          listMode="MODAL" // Usar MODAL para melhor experiência em mobile
+        />
+      </View>
+
       {loading ? (
         <MapsAnimation />
       ) : (
         <View className="flex-1">
           {location && (
             <MapView
-            ref={mapRef}
-            googleRenderer='LATEST'
+              ref={mapRef}
               provider={PROVIDER_GOOGLE}
-              style={{...StyleSheet.absoluteFillObject }}
+              mapType={mapType}
+              style={StyleSheet.absoluteFillObject}
               initialRegion={{
                 latitude: location.coords.latitude,
                 longitude: location.coords.longitude,
@@ -62,16 +128,18 @@ const HomeScreen = () => {
               }}
               showsUserLocation
               showsMyLocationButton
+              onLayout={handleMapLayout}
             >
-              <Marker
-                key="userLocation"
-                coordinate={{
-                  latitude: location.coords.latitude,
-                  longitude: location.coords.longitude,
-                }}
-                title="Sua localização"
-                description="Você está aqui"
-              />
+              {mapReady && (
+                <Marker
+                  coordinate={{
+                    latitude: location.coords.latitude,
+                    longitude: location.coords.longitude,
+                  }}
+                  title="Sua localização"
+                  description="Você está aqui"
+                />
+              )}
             </MapView>
           )}
         </View>
