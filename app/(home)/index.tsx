@@ -10,29 +10,7 @@ import SettingsModal from '@/components/screens/settings';
 import ProfileModal from '@/components/screens/ProfileModal';
 import MapsAnimation from '@/components/ui/location-search';
 
-// Adicione no seu arquivo de estilos ou no componente
-const styles = StyleSheet.create({
-  dropdownContainer: {
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? 50 : 20,
-    left: 16,
-    zIndex: 1000,
-    width: 160,
-  },
-  dropdown: {
-    backgroundColor: 'white',
-    borderColor: '#E5E7EB',
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  dropdownItem: {
-    justifyContent: 'flex-start',
-  },
-  dropdownLabel: {
-    fontSize: 14,
-    color: '#374151',
-  },
-});
+
 
 interface MenuOption {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
@@ -51,19 +29,25 @@ const HomeScreen = () => {
   const [showProfile, setShowProfile] = useState(false);
   const [mapReady, setMapReady] = useState(false);
   const [open, setOpen] = useState(false);
-  const [items, setItems] = useState([
+  const [items, setItems] = useState<{label : string, value: MapType, icon : ()=>void}[]>([
     {label: 'Padrão', value: 'standard', icon: () => <MaterialCommunityIcons name="map-outline" size={20} color="#3B82F6" />},
+     {label: 'Padrão Superior', value: 'mutedStandard', icon: () => <MaterialCommunityIcons name="map-check-outline" size={20} color="#3B82F6" />},
     {label: 'Satélite', value: 'satellite', icon: () => <MaterialCommunityIcons name="satellite-variant" size={20} color="#3B82F6" />},
+    {label: 'Satélite Superior', value: 'satelliteFlyover', icon: () => <MaterialCommunityIcons name="satellite-uplink" size={20} color="#3B82F6" />},
     {label: 'Híbrido', value: 'hybrid', icon: () => <MaterialCommunityIcons name="layers" size={20} color="#3B82F6" />},
+    {label: 'Híbrido Superior', value: 'hybridFlyover', icon: () => <MaterialCommunityIcons name="layers-plus" size={20} color="#3B82F6" />},
     {label: 'Terreno', value: 'terrain', icon: () => <MaterialCommunityIcons name="terrain" size={20} color="#3B82F6" />},
+   
+   
+  
   ]);
 
   const menuOptions: MenuOption[] = [
-    { icon: 'account', label: 'Perfil', action: () => setShowProfile(true) },
+    user &&  { icon: 'account', label: 'Perfil', action: () => setShowProfile(true) },
     { icon: 'history', label: 'Histórico', action: () => setShowProfile(true) },
     { icon: 'cart', label: 'Pedidos', action: () => setShowProfile(true) },
     { icon: 'cog', label: 'Configurações', action: () => setShowSettings(true) },
-    { icon: 'login', label: 'entrar', action: () => router.replace('/(auth)/') },
+  ! user &&   { icon: 'login', label: 'entrar', action: () => router.replace('/(auth)/') },
   ];
 
   const handleMapLayout = () => {
@@ -120,6 +104,12 @@ const HomeScreen = () => {
               provider={PROVIDER_GOOGLE}
               mapType={mapType}
               style={StyleSheet.absoluteFillObject}
+              followsUserLocation={true}
+              googleRenderer='LATEST'
+              onMoveShouldSetResponder={(event) => {
+               // alert('esta se movimentando')
+                return true;
+              }}
               initialRegion={{
                 latitude: location.coords.latitude,
                 longitude: location.coords.longitude,
@@ -188,4 +178,27 @@ const HomeScreen = () => {
   );
 };
 
+
+const styles = StyleSheet.create({
+  dropdownContainer: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 50 : 20,
+    left: 16,
+    zIndex: 1000,
+    width: 160,
+  },
+  dropdown: {
+    backgroundColor: 'white',
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  dropdownItem: {
+    justifyContent: 'flex-start',
+  },
+  dropdownLabel: {
+    fontSize: 14,
+    color: '#374151',
+  },
+});
 export default HomeScreen;
