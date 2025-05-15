@@ -37,18 +37,16 @@ const HomeScreen = () => {
     {label: 'Híbrido', value: 'hybrid', icon: () => <MaterialCommunityIcons name="layers" size={20} color="#3B82F6" />},
     {label: 'Híbrido Superior', value: 'hybridFlyover', icon: () => <MaterialCommunityIcons name="layers-plus" size={20} color="#3B82F6" />},
     {label: 'Terreno', value: 'terrain', icon: () => <MaterialCommunityIcons name="terrain" size={20} color="#3B82F6" />},
-   
-   
-  
   ]);
 
-  const menuOptions: MenuOption[] = [
-    user &&  { icon: 'account', label: 'Perfil', action: () => setShowProfile(true) },
-    { icon: 'history', label: 'Histórico', action: () => setShowProfile(true) },
-    { icon: 'cart', label: 'Pedidos', action: () => setShowProfile(true) },
-    { icon: 'cog', label: 'Configurações', action: () => setShowSettings(true) },
-  ! user &&   { icon: 'login', label: 'entrar', action: () => router.replace('/(auth)/') },
-  ];
+ const menuOptions: MenuOption[] = [
+  user && { icon: 'account', label: 'Perfil', action: () => setShowProfile(true) },
+  { icon: 'history', label: 'Histórico', action: () => setShowProfile(true) },
+  { icon: 'cart', label: 'Pedidos', action: () => setShowProfile(true) },
+  { icon: 'cog', label: 'Configurações', action: () => setShowSettings(true) },
+  !user && { icon: 'login', label: 'Entrar', action: () => router.replace('/(auth)/') },
+].filter(Boolean) as MenuOption[];
+
 
   const handleMapLayout = () => {
     setMapReady(true);
