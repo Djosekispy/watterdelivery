@@ -87,9 +87,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
      const docUser   = await getDocFromCache(docRef);
      SecureStore.setItem(CURRENT_USER_KEY, JSON.stringify(docUser));
      setUser(docUser as any);
-      toast.success('Login realizado com sucesso!');
+      router.push('/(home)/')
     } catch (error) {
-      toast.error('Credenciais incorrectas');
       throw error;
     } finally {
       setIsLoading(false);
@@ -113,10 +112,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
     await setDoc(doc(db, "users", user.uid ), newUser);
       })
-      toast.success('Cadastro realizado com sucesso!');
     } catch (error) {
-      console.error('Registration error:', error);
-      toast.error(error instanceof Error ? error.message : 'Erro ao fazer cadastro');
       throw error;
     } finally {
       setIsLoading(false);

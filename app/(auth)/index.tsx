@@ -3,21 +3,24 @@ import { View, ScrollView, KeyboardAvoidingView, Platform, Text } from 'react-na
 import { useAuth } from '../../context/AuthContext';
 import { AuthTemplate } from '@/components/layout/AuthTemplate';
 import { LoginForm } from '@/components/screens/LoginForm';
-import { SocialLogin } from '@/components/ui/SocialLogin';
 import { useRouter } from 'expo-router';
-import { toast } from 'sonner';
+import Toast from '@/components/ui/toast';
 
 const LoginScreen = () => {
   const { login } = useAuth();
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-
+  const [toast, setToast] = useState({ visible: false, message: '', type: 'success' as 'success' | 'error' });
+    
+  const showToast = (type: 'success' | 'error', message : string) => {
+    setToast({visible: true, message, type });
+  };
   const handleLogin = async ({ email, password }: { email: string; password: string }) => {
     try {
       setLoading(true);
       await login(email, password);
     } catch (error) {
-      toast.error('Credenciais incorrectas');
+     showToast('error','Credenciais incorrectas');
     } finally {
       setLoading(false);
     }
@@ -42,6 +45,12 @@ const LoginScreen = () => {
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
       >
+        <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onHide={() => setToast({ ...toast, visible: false })}
+      />
         <AuthTemplate
           title="Bem-vindo de volta"
           subtitle="Faça login para continuar"
