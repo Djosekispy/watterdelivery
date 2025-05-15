@@ -27,7 +27,7 @@ const RegisterScreen = () => {
 
   const handleLogin = () => {
     // Navegar para tela de login
-     router.push('/(auth)/');
+     router.push('/(auth)');
   };
 
   return (

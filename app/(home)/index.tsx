@@ -45,7 +45,7 @@ const HomeScreen = () => {
   user &&{ icon: 'cart', label: 'Pedidos', action: () => setShowProfile(true) },
   user && { icon: 'cog', label: 'Configurações', action: () => setShowSettings(true) },
   user && { icon: 'logout', label: 'Sair', action: () => logout() },
-  !user && { icon: 'login', label: 'Entrar', action: () => router.replace('/(auth)/') },
+  !user && { icon: 'login', label: 'Entrar', action: () => router.replace('/(auth)') },
 ].filter(Boolean) as MenuOption[];
 
 
@@ -63,7 +63,7 @@ const HomeScreen = () => {
         <DropDownPicker
           open={open}
           value={mapType}
-          items={items}
+          items={items as any}
           setOpen={setOpen}
           setValue={setMapType}
           setItems={setItems}

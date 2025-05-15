@@ -4,7 +4,7 @@ import { User, UserType } from '@/types';
 import { toast } from "sonner";
 import * as SecureStore from 'expo-secure-store';
 import { useRouter } from 'expo-router';
-import { auth, db, firebase } from '@/services/firebase';
+import { auth, db } from '@/services/firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { addDoc, collection, doc, getDoc, getDocFromCache, getDocs, query, setDoc, Timestamp, where } from "firebase/firestore"; 
 import Toast from '@/components/ui/toast';
