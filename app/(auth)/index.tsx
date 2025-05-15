@@ -16,11 +16,11 @@ const LoginScreen = () => {
     setToast({visible: true, message, type });
   };
   const handleLogin = async ({ email, password }: { email: string; password: string }) => {
+    setLoading(true);
     try {
-      setLoading(true);
-      await login(email, password);
+     await login(email, password);
     } catch (error) {
-     showToast('error','Credenciais incorrectas');
+      console.log(error)
     } finally {
       setLoading(false);
     }
@@ -45,12 +45,6 @@ const LoginScreen = () => {
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
       >
-        <Toast
-        visible={toast.visible}
-        message={toast.message}
-        type={toast.type}
-        onHide={() => setToast({ ...toast, visible: false })}
-      />
         <AuthTemplate
           title="Bem-vindo de volta"
           subtitle="Faça login para continuar"

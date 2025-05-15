@@ -37,7 +37,7 @@ const Toast: React.FC<ToastProps> = ({ message, type, visible, onHide }) => {
         styles.toastContainer,
         {
           opacity: fadeAnim,
-          backgroundColor: type === 'success' ? '#16a34a' : '#dc2626', // Tailwind green-600 / red-600
+          backgroundColor: type === 'success' ? '#16a34a' : '#dc2626', 
         },
       ]}
     >

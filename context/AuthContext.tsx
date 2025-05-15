@@ -4,9 +4,11 @@ import { User, UserType } from '@/types';
 import { toast } from "sonner";
 import * as SecureStore from 'expo-secure-store';
 import { useRouter } from 'expo-router';
-import { auth, db } from '@/services/firebase';
+import { auth, db, firebase } from '@/services/firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { addDoc, collection, doc, getDoc, getDocFromCache, setDoc, Timestamp } from "firebase/firestore"; 
+import { addDoc, collection, doc, getDoc, getDocFromCache, getDocs, query, setDoc, Timestamp, where } from "firebase/firestore"; 
+import Toast from '@/components/ui/toast';
+import LoadingModal from '@/components/ui/loading';
 
 interface AuthContextType {
   user: User | null;
@@ -26,6 +28,11 @@ const CURRENT_USER_KEY = 'agua_expressa_current_user';
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [toast, setToast] = useState({ visible: false, message: '', type: 'success' as 'success' | 'error' });
+    
+  const showToast = (type: 'success' | 'error', message : string) => {
+    setToast({visible: true, message, type });
+  };
    const router = useRouter();
   // Initialize mock data if needed
   useEffect(() => {
@@ -77,48 +84,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
   }, []);
 
-  const login = async (email: string, password: string) => {
+const login = async (email: string, password: string) => {
     setIsLoading(true);
-  
-    try {
-      // Login no Firebase Auth
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    signInWithEmailAndPassword(auth, email, password).then(async (userCredential) => {
       const firebaseUser = userCredential.user;
-  
-      // Buscar dados do Firestore com o UID
-      const docRef = doc(db, "users", firebaseUser.uid);
-      const userDoc = await getDoc(docRef);
-  
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        setUser(userData as User);
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('email', '==', email));
+      const querySnapshot = await getDocs(q);
+        const userDoc = querySnapshot.docs[0];
+        setUser(userDoc.data() as User);
         router.push("/(home)/");
-      } else {
-        console.warn("Usuário autenticado, mas dados não encontrados no Firestore.");
-      }
-    } catch (error: any) {
-      console.error("Erro no login:", error.message);
-    } finally {
+    }).catch((error) => {
+      showToast('error','Credenciais incorrectas');
+    }).finally(() => {
       setIsLoading(false);
-    }
-  };
+    }); 
+};
 
-  const register = async (userData: Partial<User>, password: string) => {
+const register = async (userData: Partial<User>, password: string) => {
     setIsLoading(true);
   
-    try {
       if (!userData.email || !password) {
         throw new Error("Email e senha são obrigatórios.");
       }
-  
-      // Criar usuário no Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(auth, userData.email, password);
+     createUserWithEmailAndPassword(auth, userData.email, password).then(async (userCredential) => {
       const firebaseUser = userCredential.user;
-  
       const newUser: User = {
         id: firebaseUser.uid, 
         name: userData.name || '',
-        email: userData.email,
+        email: userData.email || '',
         password: '', 
         photo: firebaseUser.photoURL || '',
         userType: userData.userType || 'consumer',
@@ -127,18 +121,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }),
       };
       await addDoc(collection(db, "users"), newUser);
-      await login(userData.email, password);
-    } catch (error: any) {
-      console.error("Erro ao registrar:", error.message);
-    } finally {
+      await login(firebaseUser.email as string, password); 
+    }).catch((error) => {
+      showToast('error','Erro ao cadastrar!');
+    }).finally(() => {
       setIsLoading(false);
-    }
+    });
   };
 
   const logout = async () => {
     await signOut(auth);
     setUser(null);
-    toast.info('Você saiu da sua conta');
   };
 
   const updateUserLocation = (location: { lat: number; lng: number }) => {
@@ -163,7 +156,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updateUserLocation
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+  <>
+        <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onHide={() => setToast({ ...toast, visible: false })}
+      />
+        <LoadingModal visible={isLoading} />
+  <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  </>
+  )
+  ;
 };
 
 export const useAuth = () => {

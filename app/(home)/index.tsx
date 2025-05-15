@@ -19,7 +19,7 @@ interface MenuOption {
 }
 
 const HomeScreen = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const mapRef = useRef<MapView>(null);
   const router = useRouter();
   const [mapType, setMapType] = useState<MapType>('standard');
@@ -44,7 +44,7 @@ const HomeScreen = () => {
   user &&{ icon: 'history', label: 'Histórico', action: () => setShowProfile(true) },
   user &&{ icon: 'cart', label: 'Pedidos', action: () => setShowProfile(true) },
   user && { icon: 'cog', label: 'Configurações', action: () => setShowSettings(true) },
-  user && { icon: 'logout', label: 'Sair', action: () => setShowSettings(true) },
+  user && { icon: 'logout', label: 'Sair', action: () => logout() },
   !user && { icon: 'login', label: 'Entrar', action: () => router.replace('/(auth)/') },
 ].filter(Boolean) as MenuOption[];
 

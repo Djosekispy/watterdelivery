@@ -1,25 +1,29 @@
 // src/screens/ResetPasswordScreen.tsx
 import React, { useState } from 'react';
 import { ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 import { ResetPasswordFormData } from '@/types/authSchemas';
-import { AuthTemplate } from '@/components/layout/AuthTemplate';
 import { ResetPasswordForm } from '@/components/screens/ResetPasswordForm';
 import { useRouter } from 'expo-router';
+import { sendPasswordResetEmail } from 'firebase/auth';
+import { auth } from '@/services/firebase';
+import Toast from '@/components/ui/toast';
 
 const ResetPasswordScreen = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-
+  const [toast, setToast] = useState({ visible: false, message: '', type: 'success' as 'success' | 'error' });
+    
+  const showToast = (type: 'success' | 'error', message : string) => {
+    setToast({visible: true, message, type });
+  };
   const handleSubmit = async ({ email }: ResetPasswordFormData) => {
     try {
       setLoading(true);
-      // Simular chamada à API
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await sendPasswordResetEmail(auth, email)
       setSuccess(true);
     } catch (error) {
-      console.error('Reset password error:', error);
+      showToast('error','Erro ao enviar código! Tente novamente')
     } finally {
       setLoading(false);
     }
@@ -38,6 +42,12 @@ const ResetPasswordScreen = () => {
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
       >
+          <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onHide={() => setToast({ ...toast, visible: false })}
+      />
         
           <ResetPasswordForm 
             onSubmit={handleSubmit}
