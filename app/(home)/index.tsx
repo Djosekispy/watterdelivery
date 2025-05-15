@@ -42,13 +42,14 @@ const HomeScreen = () => {
   
   ]);
 
-  const menuOptions: MenuOption[] = [
-    user &&  { icon: 'account', label: 'Perfil', action: () => setShowProfile(true) },
-    { icon: 'history', label: 'Histórico', action: () => setShowProfile(true) },
-    { icon: 'cart', label: 'Pedidos', action: () => setShowProfile(true) },
-    { icon: 'cog', label: 'Configurações', action: () => setShowSettings(true) },
-  ! user &&   { icon: 'login', label: 'entrar', action: () => router.replace('/(auth)/') },
-  ];
+ const menuOptions: MenuOption[] = [
+  user && { icon: 'account', label: 'Perfil', action: () => setShowProfile(true) },
+  { icon: 'history', label: 'Histórico', action: () => setShowProfile(true) },
+  { icon: 'cart', label: 'Pedidos', action: () => setShowProfile(true) },
+  { icon: 'cog', label: 'Configurações', action: () => setShowSettings(true) },
+  !user && { icon: 'login', label: 'Entrar', action: () => router.replace('/(auth)/') },
+].filter(Boolean) as MenuOption[];
+
 
   const handleMapLayout = () => {
     setMapReady(true);
