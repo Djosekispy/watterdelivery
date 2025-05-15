@@ -6,7 +6,7 @@ import * as SecureStore from 'expo-secure-store';
 import { useRouter } from 'expo-router';
 import { auth, db } from '@/services/firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { doc, getDocFromCache, setDoc, Timestamp } from "firebase/firestore"; 
+import { addDoc, collection, doc, getDoc, getDocFromCache, setDoc, Timestamp } from "firebase/firestore"; 
 
 interface AuthContextType {
   user: User | null;
@@ -79,17 +79,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
+  
     try {
-     const userCredential =  await  signInWithEmailAndPassword(auth, email, password);
-     const user = userCredential.user;
-     
-     const docRef = doc(db, "users", user.uid);
-     const docUser   = await getDocFromCache(docRef);
-     SecureStore.setItem(CURRENT_USER_KEY, JSON.stringify(docUser));
-     setUser(docUser as any);
-      router.push('/(home)/')
-    } catch (error) {
-      throw error;
+      // Login no Firebase Auth
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const firebaseUser = userCredential.user;
+  
+      // Buscar dados do Firestore com o UID
+      const docRef = doc(db, "users", firebaseUser.uid);
+      const userDoc = await getDoc(docRef);
+  
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        setUser(userData as User);
+        router.push("/(home)/");
+      } else {
+        console.warn("Usuário autenticado, mas dados não encontrados no Firestore.");
+      }
+    } catch (error: any) {
+      console.error("Erro no login:", error.message);
     } finally {
       setIsLoading(false);
     }
@@ -97,23 +105,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const register = async (userData: Partial<User>, password: string) => {
     setIsLoading(true);
+  
     try {
-      createUserWithEmailAndPassword(auth,user?.email as string, user?.password as string).then( async (userCredential) => {
-        const user = userCredential.user;
+      if (!userData.email || !password) {
+        throw new Error("Email e senha são obrigatórios.");
+      }
+  
+      // Criar usuário no Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, userData.email, password);
+      const firebaseUser = userCredential.user;
+  
       const newUser: User = {
-        id: Date.now().toString(),
+        id: firebaseUser.uid, 
         name: userData.name || '',
-        email: userData.email || '',
-        password : user.uid || '',
-        photo : user.photoURL || '',
+        email: userData.email,
+        password: '', 
+        photo: firebaseUser.photoURL || '',
         userType: userData.userType || 'consumer',
-        ...(userData.userType === 'supplier' && { pricePerLiter: userData.pricePerLiter || 0 }),
-        ...userData
+        ...(userData.userType === 'supplier' && {
+          pricePerLiter: userData.pricePerLiter || 0
+        }),
       };
-    await setDoc(doc(db, "users", user.uid ), newUser);
-      })
-    } catch (error) {
-      throw error;
+      await addDoc(collection(db, "users"), newUser);
+      await login(userData.email, password);
+    } catch (error: any) {
+      console.error("Erro ao registrar:", error.message);
     } finally {
       setIsLoading(false);
     }

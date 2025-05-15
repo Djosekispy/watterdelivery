@@ -15,8 +15,7 @@ interface RegisterFormProps {
 export const RegisterForm = ({ onSubmit, loading, onLoginPress }: RegisterFormProps) => {
   const { 
     control, 
-    handleSubmit, 
-    formState: { errors } 
+    handleSubmit 
   } = useForm<RegisterFormData>({
     resolver: yupResolver(registerSchema),
     defaultValues: {
@@ -28,7 +27,7 @@ export const RegisterForm = ({ onSubmit, loading, onLoginPress }: RegisterFormPr
   });
 
   return (
-    <View className="w-full">
+    <View style={{ width: '100%' }}>
       <FormInput
         control={control}
         name="name"
@@ -61,7 +60,7 @@ export const RegisterForm = ({ onSubmit, loading, onLoginPress }: RegisterFormPr
         icon="lock-check-outline"
       />
       
-      <View className="mt-4">
+      <View style={{ marginTop: 16 }}>
         <Button 
           title="Cadastrar" 
           onPress={handleSubmit(onSubmit)} 
@@ -69,10 +68,10 @@ export const RegisterForm = ({ onSubmit, loading, onLoginPress }: RegisterFormPr
         />
       </View>
       
-      <View className="flex-row justify-center mt-6">
-        <Text className="text-gray-600">Já tem uma conta?</Text>
-        <TouchableOpacity onPress={onLoginPress} className="ml-1">
-          <Text className="text-blue-600 font-medium">Faça login</Text>
+      <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 24 }}>
+        <Text style={{ color: '#4B5563' }}>Já tem uma conta?</Text>
+        <TouchableOpacity onPress={onLoginPress} style={{ marginLeft: 4 }}>
+          <Text style={{ color: '#2563EB', fontWeight: '600' }}>Faça login</Text>
         </TouchableOpacity>
       </View>
     </View>
