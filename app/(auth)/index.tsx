@@ -5,6 +5,7 @@ import { AuthTemplate } from '@/components/layout/AuthTemplate';
 import { LoginForm } from '@/components/screens/LoginForm';
 import { SocialLogin } from '@/components/ui/SocialLogin';
 import { useRouter } from 'expo-router';
+import { toast } from 'sonner';
 
 const LoginScreen = () => {
   const { login } = useAuth();
@@ -16,7 +17,7 @@ const LoginScreen = () => {
       setLoading(true);
       await login(email, password);
     } catch (error) {
-      console.error('Login error:', error);
+      toast.error('Credenciais incorrectas');
     } finally {
       setLoading(false);
     }

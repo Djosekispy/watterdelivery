@@ -4,6 +4,9 @@ import { User, UserType } from '@/types';
 import { toast } from "sonner";
 import * as SecureStore from 'expo-secure-store';
 import { useRouter } from 'expo-router';
+import { auth, db } from '@/services/firebase';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { doc, getDocFromCache, setDoc, Timestamp } from "firebase/firestore"; 
 
 interface AuthContextType {
   user: User | null;
@@ -77,29 +80,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // In a real app, this would be an API call
-      // For now, we'll simulate a delay and check against our mock data
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      const usersJson = SecureStore.getItem(MOCK_USERS_KEY) || '[]';
-      const users = JSON.parse(usersJson) as User[];
-
-      const matchedUser = users.find(u => u.email === email);
-      
-      if (!matchedUser) {
-        throw new Error('Usuário não encontrado');
-      }
-
-      // In a real app, we would verify the password hash
-      // Here we're just simulating success
-      
-      // Save current user
-      SecureStore.setItem(CURRENT_USER_KEY, JSON.stringify(matchedUser));
-      setUser(matchedUser);
+     const userCredential =  await  signInWithEmailAndPassword(auth, email, password);
+     const user = userCredential.user;
+     
+     const docRef = doc(db, "users", user.uid);
+     const docUser   = await getDocFromCache(docRef);
+     SecureStore.setItem(CURRENT_USER_KEY, JSON.stringify(docUser));
+     setUser(docUser as any);
       toast.success('Login realizado com sucesso!');
     } catch (error) {
-      console.error('Login error:', error);
-      toast.error(error instanceof Error ? error.message : 'Erro ao fazer login');
+      toast.error('Credenciais incorrectas');
       throw error;
     } finally {
       setIsLoading(false);
@@ -109,37 +99,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (userData: Partial<User>, password: string) => {
     setIsLoading(true);
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Get existing users
-      const usersJson = SecureStore.getItem(MOCK_USERS_KEY) || '[]';
-      const users = JSON.parse(usersJson) as User[];
-
-      // Check if email already exists
-      if (users.some(u => u.email === userData.email)) {
-        throw new Error('Este email já está em uso');
-      }
-
-      // Create new user
+      createUserWithEmailAndPassword(auth,user?.email as string, user?.password as string).then( async (userCredential) => {
+        const user = userCredential.user;
       const newUser: User = {
         id: Date.now().toString(),
         name: userData.name || '',
         email: userData.email || '',
-        photo : 'https://cdn3.iconfinder.com/data/icons/business-avatar-1/512/3_avatar-512.png',
+        password : user.uid || '',
+        photo : user.photoURL || '',
         userType: userData.userType || 'consumer',
         ...(userData.userType === 'supplier' && { pricePerLiter: userData.pricePerLiter || 0 }),
         ...userData
       };
-
-      // Save to "database"
-      users.push(newUser);
-      SecureStore.setItem(MOCK_USERS_KEY, JSON.stringify(users));
-
-      // Log user in
-      SecureStore.setItem(CURRENT_USER_KEY, JSON.stringify(newUser));
-      setUser(newUser);
-      
+    await setDoc(doc(db, "users", user.uid ), newUser);
+      })
       toast.success('Cadastro realizado com sucesso!');
     } catch (error) {
       console.error('Registration error:', error);
@@ -151,7 +124,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
-   await  SecureStore.deleteItemAsync(CURRENT_USER_KEY);
+    await signOut(auth);
     setUser(null);
     toast.info('Você saiu da sua conta');
   };
@@ -160,17 +133,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user) return;
 
     const updatedUser = { ...user, location };
-    
-    // Update in SecureStore
     SecureStore.setItem(CURRENT_USER_KEY, JSON.stringify(updatedUser));
-    
-    // Update in users array
     const usersJson = SecureStore.getItem(MOCK_USERS_KEY) || '[]';
     const users = JSON.parse(usersJson) as User[];
     const updatedUsers = users.map(u => u.id === user.id ? {...u, location} : u);
     SecureStore.setItem(MOCK_USERS_KEY, JSON.stringify(updatedUsers));
     
-    // Update state
     setUser(updatedUser);
   };
 
