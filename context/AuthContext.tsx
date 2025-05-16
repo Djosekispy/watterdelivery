@@ -116,6 +116,7 @@ const register = async (userData: Partial<User>, password: string) => {
         password: '', 
         photo: firebaseUser.photoURL || '',
         userType: userData.userType || 'consumer',
+        createdAt : Timestamp.now().toDate(),
         ...(userData.userType === 'supplier' && {
           pricePerLiter: userData.pricePerLiter || 0
         }),

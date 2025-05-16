@@ -8,20 +8,21 @@ export interface User {
   password: string;
   email: string;
   userType: UserType;
+  createdAt : Date;
   location?: {
     lat: number;
     lng: number;
   };
   phone?: string;
   address?: string;
-  pricePerLiter?: number; // for suppliers
+  pricePerLiter?: number;
 }
 
 export interface Order {
   id: string;
   consumerId: string;
   supplierId?: string;
-  quantity: number; // in liters
+  quantity: number; 
   status: OrderStatus;
   location: {
     address: string;
@@ -55,5 +56,5 @@ export interface Notification {
 export interface Supplier extends User {
   userType: 'supplier';
   pricePerLiter: number;
-  distanceKm?: number; // calculated field
+  distanceKm?: number; 
 }
