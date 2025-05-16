@@ -12,6 +12,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
 import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
 
 interface ProfileModalProps {
   visible: boolean;
@@ -20,6 +21,7 @@ interface ProfileModalProps {
 
 const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose }) => {
   const { user } = useAuth();
+  const router = useRouter();
   const defaultImage = 'https://cdn3.iconfinder.com/data/icons/business-avatar-1/512/3_avatar-512.png';
 
   const ProfileSection = () => (
@@ -139,7 +141,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose }) => {
                   color="bg-blue-500"
                   onPress={() => {
                     onClose();
-                    // Navegar para editar perfil
+                    router.push('/(home)/profile')
                   }}
                 />
                 <ActionButton

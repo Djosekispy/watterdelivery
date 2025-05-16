@@ -1,12 +1,11 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserType } from '@/types';
-import { toast } from "sonner";
 import * as SecureStore from 'expo-secure-store';
 import { useRouter } from 'expo-router';
 import { auth, db } from '@/services/firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { addDoc, collection, doc, getDoc, getDocFromCache, getDocs, query, setDoc, Timestamp, where } from "firebase/firestore"; 
+import { addDoc, collection, getDocs, query, Timestamp, where } from "firebase/firestore"; 
 import Toast from '@/components/ui/toast';
 import LoadingModal from '@/components/ui/loading';
 
@@ -34,45 +33,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setToast({visible: true, message, type });
   };
    const router = useRouter();
-  // Initialize mock data if needed
-  useEffect(() => {
-    // Load users from SecureStore or initialize with empty array
-    const existingUsers = SecureStore.getItem(MOCK_USERS_KEY);
-    if (!existingUsers) {
-      // Create some mock suppliers
-      const initialUsers = [
-        {
-          id: '1',
-          name: 'Água Pura Ltda',
-          email: 'supplier1@example.com',
-          userType: 'supplier' as UserType,
-          phone: '(11) 99999-1111',
-          pricePerLiter: 0.15,
-          location: { lat: -23.5505, lng: -46.6333 },
-        },
-        {
-          id: '2',
-          name: 'Aqua Delivery',
-          email: 'supplier2@example.com',
-          userType: 'supplier' as UserType,
-          phone: '(11) 99999-2222',
-          pricePerLiter: 0.12,
-          location: { lat: -23.5605, lng: -46.6433 },
-        },
-        {
-          id: '3',
-          name: 'H2O Express',
-          email: 'supplier3@example.com',
-          userType: 'supplier' as UserType,
-          phone: '(11) 99999-3333',
-          pricePerLiter: 0.18,
-          location: { lat: -23.5305, lng: -46.6233 },
-        },
-      ];
-      SecureStore.setItem(MOCK_USERS_KEY, JSON.stringify(initialUsers));
-    }
 
-    // Check if user is already logged in
+  useEffect(() => {
     const savedUser = SecureStore.getItem(CURRENT_USER_KEY);
     if (savedUser) {
       setUser(JSON.parse(savedUser));
@@ -93,6 +55,7 @@ const login = async (email: string, password: string) => {
       const querySnapshot = await getDocs(q);
         const userDoc = querySnapshot.docs[0];
         setUser(userDoc.data() as User);
+        SecureStore.setItem(CURRENT_USER_KEY, JSON.stringify(userDoc.data()));
         router.push("/(home)/");
     }).catch((error) => {
       showToast('error','Credenciais incorrectas');
