@@ -1,20 +1,6 @@
-import React from 'react';
-import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-import { GOOGLE_MAPS_API_KEY } from '@/config/google-maps-key';
-import { View, TouchableOpacity, Text } from 'react-native';
-
-
-// Adicione esta função de workaround antes do componente
-function getRandomValuesPolyfill(buffer: Uint8Array) {
-  const bytes = require('react-native-randombytes').randomBytes(buffer.length);
-  buffer.set(bytes);
-}
-
-if (typeof global.crypto === 'undefined') {
-  global.crypto = {
-    getRandomValues: getRandomValuesPolyfill,
-  } as Crypto;
-}
+import React, { useState } from 'react';
+import { View, TextInput, TouchableOpacity, Text, Keyboard } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 
 interface SupplierFiltersProps {
   filters: {
@@ -33,43 +19,52 @@ interface SupplierFiltersProps {
 }
 
 const SupplierFilters = ({ filters, onFilterChange, onAddressSelect }: SupplierFiltersProps) => {
+  const [addressInput, setAddressInput] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  const handleSearch = () => {
+    if (addressInput.trim()) {
+      onAddressSelect(addressInput);
+      onFilterChange({ searchAddress: addressInput });
+      Keyboard.dismiss();
+    }
+  };
+
+  const clearSearch = () => {
+    setAddressInput('');
+    onFilterChange({ searchAddress: null });
+  };
+
   return (
-    <View className="bg-white shadow-sm p-3">
-      <View className="mb-3">
-        <GooglePlacesAutocomplete
-          placeholder="Buscar por endereço"
-          onPress={(data) => {
-            onAddressSelect(data.description);
-            onFilterChange({ searchAddress: data.description });
-          }}
-          query={{
-            key: GOOGLE_MAPS_API_KEY,
-            language: 'pt',
-            components: 'country:ao',
-          }}
-          styles={{
-            textInput: {
-              height: 40,
-              borderWidth: 1,
-              borderColor: '#e5e7eb',
-              borderRadius: 8,
-              paddingHorizontal: 10,
-            },
-            listView: {
-              position: 'absolute',
-              top: 50,
-              zIndex: 1000,
-              elevation: 3,
-              backgroundColor: 'white',
-              width: '100%',
-            },
-          }}
-          fetchDetails={true}
-          enablePoweredByContainer={false}
-          textInputProps={{
-            autoCorrect: false,
-          }}
-        />
+    <View className="bg-white shadow-sm p-4 rounded-xl space-y-4">
+      {/* Campo de busca manual */}
+      <View className={`mb-4 border rounded-lg ${isSearchFocused ? 'border-blue-500' : 'border-gray-300'}`}>
+        <View className="flex-row items-center px-3 py-2">
+          <MaterialIcons name="search" size={24} color="#6b7280" />
+          <TextInput
+            className="flex-1 ml-2 text-gray-700"
+            placeholder="Digite um endereço (ex: Rua Comercial, Luanda)"
+            value={addressInput}
+            onChangeText={setAddressInput}
+            onSubmitEditing={handleSearch}
+            onFocus={() => setIsSearchFocused(true)}
+            onBlur={() => setIsSearchFocused(false)}
+            returnKeyType="search"
+          />
+          {addressInput ? (
+            <TouchableOpacity onPress={clearSearch}>
+              <MaterialIcons name="close" size={20} color="#6b7280" />
+            </TouchableOpacity>
+          ) : null}
+        </View>
+        
+        <TouchableOpacity
+          onPress={handleSearch}
+          className="bg-blue-600 py-2 rounded-b-lg items-center"
+          disabled={!addressInput.trim()}
+        >
+          <Text className="text-white font-medium">Buscar Endereço</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Filtros rápidos */}

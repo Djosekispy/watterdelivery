@@ -43,10 +43,10 @@ const HomeScreen = () => {
   user && { icon: 'account', label: 'Perfil', action: () => setShowProfile(true) },
   user &&{ icon: 'history', label: 'Histórico', action: () => setShowProfile(true) },
   user &&{ icon: 'cart', label: 'Pedidos', action: () => setShowProfile(true) },
-  user && { icon: 'car', label: 'Fornecedores', action: () => router.replace('/(home)/suplier')  },
+  user && { icon: 'car', label: 'Fornecedores', action: () => router.push('/(home)/suplier')  },
   user && { icon: 'cog', label: 'Configurações', action: () => setShowSettings(true) },
   user && { icon: 'logout', label: 'Sair', action: () => logout() },
-  !user && { icon: 'login', label: 'Entrar', action: () => router.replace('/(auth)') },
+  !user && { icon: 'login', label: 'Entrar', action: () => router.push('/(auth)') },
 ].filter(Boolean) as MenuOption[];
 
 

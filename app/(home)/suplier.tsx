@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, SafeAreaView } from 'react-native';
+import { View, SafeAreaView, Text, TouchableOpacity } from 'react-native';
 import * as Location from 'expo-location';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { getDistance} from 'geolib';
@@ -11,8 +11,11 @@ import OrderFormModal from '@/components/suppliers/OrderFormModal';
 import { Order } from '@/types';
 import { GOOGLE_MAPS_API_KEY } from '@/config/google-maps-key';
 import { db } from '@/services/firebase';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 const SupplierListScreen = () => {
+  const navigate = useRouter()
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [filteredSuppliers, setFilteredSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -189,8 +192,25 @@ const SupplierListScreen = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50 pt-1">
+    <SafeAreaView className="flex-1 bg-gray-50 pt-6">
       <View className="flex-1">
+      <View className="flex-row items-center justify-between px-6 py-4  ">
+  <TouchableOpacity 
+    onPress={() => navigate.back()}
+    className="p-2 rounded-full bg-gray-100 active:bg-gray-200"
+  >
+    <MaterialCommunityIcons 
+      name="arrow-left" 
+      color="#4b5563" 
+      size={26} 
+    />
+  </TouchableOpacity>
+  
+  <Text className="text-xl font-bold text-gray-800 flex-1 text-center mx-4">
+    Encontre um fornecedor 
+  </Text>
+  <View className="w-8" />
+</View>
         <SupplierFilters 
           filters={filters} 
           onFilterChange={handleFilterChange}

@@ -9,13 +9,13 @@ interface SupplierCardProps {
 const SupplierCard = ({ supplier, onPress }: SupplierCardProps) => {
   return (
     <TouchableOpacity onPress={onPress}>
-      <View className="flex-row bg-white rounded-lg shadow-md mb-3 overflow-hidden">
+      <View className="flex-row bg-white rounded-lg p-3 shadow-md overflow-hidden">
         <Image 
           source={{ uri: supplier.photo || 'https://via.placeholder.com/150' }} 
-          className="w-24 h-24 rounded-l-lg"
+          className="w-24 h-24 rounded-full object-cover"
           resizeMode="cover"
         />
-        <View className="flex-1 p-3 justify-between">
+        <View className="flex-1 justify-between px-2">
           <View>
             <Text className="text-lg font-bold text-gray-800">{supplier.name}</Text>
             <Text className="text-sm text-gray-600">{supplier.address}</Text>
