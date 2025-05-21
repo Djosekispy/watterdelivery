@@ -8,9 +8,10 @@ import React, { useState } from 'react';
 import { ScrollView, Alert, View, TouchableOpacity, Text } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { ArrowLeft } from 'lucide-react-native'; // ou outro ícone compatível
+import { useRouter } from 'expo-router';
 
 const ProfileScreen = () => {
-  const navigation = useNavigation();
+  const navigation = useRouter();
   const { user, updatedUser } = useAuth();
   const userDate = getAuth().currentUser;
   const [userState, setUser] = useState<User>(user as User);
@@ -31,7 +32,7 @@ const ProfileScreen = () => {
     <ScrollView className="flex-1 bg-gray-100 px-6 pt-10">
       {/* Botão de Voltar */}
       <View className="flex-row items-center mb-4">
-        <TouchableOpacity onPress={() => navigation.goBack()} className="p-2 rounded-full bg-white shadow">
+        <TouchableOpacity onPress={() => navigation.back()} className="p-2 rounded-full bg-white shadow">
           <ArrowLeft size={24} color="#333" />
         </TouchableOpacity>
         <Text className="ml-4 text-xl font-semibold text-gray-800">Editar Perfil</Text>
@@ -53,7 +54,19 @@ const ProfileScreen = () => {
         <InputProfile
           label="Email"
           value={userState.email}
-          onChangeText={val => handleChange('email', val)}
+          onChangeText={val => Alert.alert('Editar Email', 'Email não pode ser alterado, vá para configurações',   [
+            {
+              text: 'Cancelar',
+              onPress: () => {},
+              style: 'cancel',
+            },
+            {
+              text: 'Configurações',
+              onPress: () => {
+                navigation.push('(home)/settings')
+              },
+            },
+          ])}
         />
         <InputProfile
           label="Telefone"

@@ -21,7 +21,7 @@ interface ProfileModalProps {
 }
 
 const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose }) => {
-  const { user } = useAuth();
+  const { user, updatedUser } = useAuth();
   const router = useRouter();
   const defaultImage = 'https://cdn3.iconfinder.com/data/icons/business-avatar-1/512/3_avatar-512.png';
 
@@ -30,13 +30,10 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose }) => {
       <View className="relative mr-4">
         <Image
           source={{ uri : user?.photo || auth.currentUser?.photoURL || defaultImage}}
-         style={{ width: 96, height: 96 }} 
-          className="rounded-full bg-gray-200" 
+         style={{ width: 60, height: 60 }} 
+          className="rounded-full  bg-gray-200" 
           contentFit="cover"
         />
-        <View className="absolute bottom-0 right-0 bg-blue-500 p-1.5 rounded-full border-2 border-white">
-          <MaterialCommunityIcons name="camera" size={16} color="white" />
-        </View>
       </View>
       <View>
         <Text className="text-xl font-bold text-gray-800">
@@ -145,15 +142,17 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose }) => {
                     router.push('/(home)/profile')
                   }}
                 />
-                <ActionButton
-                  icon="map-marker-plus"
-                  label="Gerenciar Endereços"
-                  color="bg-green-500"
-                  onPress={() => {
+{
+ user?.userType !== 'supplier' &&     <ActionButton
+                  icon="water-boiler"
+                  label="Ser Fornecedor"
+                  color="bg-sky-400"
+                  onPress={ async () => {
                     onClose();
-                    // Navegar para editar endereços
+                    await updatedUser({userType : 'supplier'})
+                    router.push('/(home)/profile')
                   }}
-                />
+                />}
               </View>
             </View>
           </ScrollView>

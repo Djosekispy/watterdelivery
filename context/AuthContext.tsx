@@ -76,6 +76,7 @@ const updatedUser = async (userData: Partial<User>) => {
     auth.currentUser && updateProfile(auth.currentUser, {
       displayName: userData.name,
     });
+    SecureStore.setItem(CURRENT_USER_KEY, JSON.stringify({...userData}));
     showToast('success','Usuário atualizado com sucesso!');
   }).catch((error) => {
     showToast('error','Erro ao atualizar usuário!');
@@ -91,6 +92,7 @@ const updatePhoto = async (photo: string) => {
   const querySnapshot = await getDocs(q);
   updateDoc(querySnapshot.docs[0].ref, {photo}).then(() => {
     setUser({...user, photo} as User);
+    SecureStore.setItem(CURRENT_USER_KEY, JSON.stringify({...user, photo}));
     showToast('success','Foto de perfil atualizada com sucesso!');
   }).catch((error) => {
     showToast('error','Erro ao atualizar foto de perfil!');
@@ -106,7 +108,7 @@ const register = async (userData: Partial<User>, password: string) => {
       if (!userData.email || !password) {
         throw new Error("Email e senha são obrigatórios.");
       }
-      
+
      createUserWithEmailAndPassword(auth, userData.email, password).then(async (userCredential) => {
       const firebaseUser = userCredential.user;
       const newUser: User = {
@@ -122,7 +124,9 @@ const register = async (userData: Partial<User>, password: string) => {
         }),
       };
       await addDoc(collection(db, "users"), newUser);
-      await login(firebaseUser.email as string, password); 
+      setTimeout(async() => {
+        await login(firebaseUser.email as string, password); 
+      }, 2000);
     }).catch((error) => {
       showToast('error','Erro ao cadastrar!');
     }).finally(() => {
