@@ -22,7 +22,6 @@ const ProfileScreen = () => {
   const handleSave = async () => {
     try {
       await updatedUser(userState);
-      Alert.alert('Sucesso', 'Perfil atualizado com sucesso.');
     } catch (error) {
       Alert.alert('Erro', 'Não foi possível atualizar o perfil.');
     }
@@ -42,7 +41,7 @@ const ProfileScreen = () => {
       <ProfileHeader
         name={userState.name}
         email={userState.email}
-        photo={userDate?.photoURL as string}
+        photo={userDate?.photoURL  || userState.photo}
       />
 
       <View className="bg-white p-4 rounded-2xl shadow mt-6 space-y-4">

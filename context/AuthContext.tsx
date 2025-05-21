@@ -4,7 +4,7 @@ import { User, UserType } from '@/types';
 import * as SecureStore from 'expo-secure-store';
 import { useRouter } from 'expo-router';
 import { auth, db } from '@/services/firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
 import { addDoc, collection, getDocs, query, Timestamp, updateDoc, where } from "firebase/firestore"; 
 import Toast from '@/components/ui/toast';
 import LoadingModal from '@/components/ui/loading';
@@ -60,7 +60,7 @@ const login = async (email: string, password: string) => {
         SecureStore.setItem(CURRENT_USER_KEY, JSON.stringify(userDoc.data()));
         router.push("/(home)/");
     }).catch((error) => {
-      showToast('error','Credenciais incorrectas');
+      showToast('error',`${error}`);
     }).finally(() => {
       setIsLoading(false);
     }); 
@@ -73,6 +73,9 @@ const updatedUser = async (userData: Partial<User>) => {
   const querySnapshot = await getDocs(q);
   updateDoc(querySnapshot.docs[0].ref, {...userData}).then(() => {
     setUser(userData as User);
+    auth.currentUser && updateProfile(auth.currentUser, {
+      displayName: userData.name,
+    });
     showToast('success','Usuário atualizado com sucesso!');
   }).catch((error) => {
     showToast('error','Erro ao atualizar usuário!');
@@ -103,6 +106,7 @@ const register = async (userData: Partial<User>, password: string) => {
       if (!userData.email || !password) {
         throw new Error("Email e senha são obrigatórios.");
       }
+      
      createUserWithEmailAndPassword(auth, userData.email, password).then(async (userCredential) => {
       const firebaseUser = userCredential.user;
       const newUser: User = {

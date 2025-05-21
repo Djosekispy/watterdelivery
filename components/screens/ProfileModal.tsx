@@ -13,6 +13,7 @@ import { useAuth } from '@/context/AuthContext';
 import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
+import { auth } from '@/services/firebase';
 
 interface ProfileModalProps {
   visible: boolean;
@@ -28,7 +29,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose }) => {
     <View className="flex-row items-center mb-6 px-4 mx-4">
       <View className="relative mr-4">
         <Image
-          source={defaultImage}
+          source={{ uri : user?.photo || auth.currentUser?.photoURL || defaultImage}}
          style={{ width: 96, height: 96 }} 
           className="rounded-full bg-gray-200" 
           contentFit="cover"

@@ -3,7 +3,7 @@ import { View, Image, Text, TouchableOpacity, ActivityIndicator, Alert } from 'r
 import { Camera } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { updateDoc, doc } from 'firebase/firestore';
+import { updateDoc, doc, collection, query, where, getDocs } from 'firebase/firestore';
 import { useAuth } from '@/context/AuthContext';
 import { db } from '@/services/firebase';
 
@@ -14,7 +14,7 @@ interface ProfileHeaderProps {
 }
 
 export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ name, photo, email }) => {
-  const { user } = useAuth();
+  const { user,updatePhoto } = useAuth();
   const [uploading, setUploading] = useState(false);
   const [photoURL, setPhotoURL] = useState(photo);
 
@@ -26,6 +26,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ name, photo, email
 
     if (!result.canceled && result.assets.length > 0) {
       const imageUri = result.assets[0].uri;
+      setPhotoURL(imageUri);
       await uploadImageToFirebase(imageUri);
     }
   };
@@ -33,24 +34,16 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ name, photo, email
   const uploadImageToFirebase = async (uri: string) => {
     try {
       if (!user?.id) return;
-
       setUploading(true);
       const response = await fetch(uri);
       const blob = await response.blob();
       const storage = getStorage();
       const storageRef = ref(storage, `profile/${user.id}.jpg`);
-
       await uploadBytes(storageRef, blob);
       const downloadURL = await getDownloadURL(storageRef);
-
-      // Atualiza no Firestore
-      const userRef = doc(db, 'users', user.id);
-      await updateDoc(userRef, { photo: downloadURL });
-
-      setPhotoURL(downloadURL);
-      Alert.alert('Sucesso', 'Foto de perfil atualizada!');
+      await updatePhoto(downloadURL);
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível atualizar a foto.');
+      Alert.alert('Erro', `${error}`);
     } finally {
       setUploading(false);
     }
@@ -60,7 +53,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ name, photo, email
     <View className="items-center mb-6 relative">
       <View className="relative">
         <Image
-          source={{ uri: photoURL }}
+          source={{ uri: photoURL || user?.photo}}
           className="w-24 h-24 rounded-full border-2 border-blue-500"
         />
         <TouchableOpacity
