@@ -5,7 +5,7 @@ import * as SecureStore from 'expo-secure-store';
 import { useRouter } from 'expo-router';
 import { auth, db } from '@/services/firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { addDoc, collection, getDocs, query, Timestamp, where } from "firebase/firestore"; 
+import { addDoc, collection, getDocs, query, Timestamp, updateDoc, where } from "firebase/firestore"; 
 import Toast from '@/components/ui/toast';
 import LoadingModal from '@/components/ui/loading';
 
@@ -14,6 +14,8 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (user: Partial<User>, password: string) => Promise<void>;
+  updatedUser : (user : Partial<User>)=> Promise<void>;
+  updatePhoto : (photo : string)=> Promise<void>;
   logout: () => void;
   updateUserLocation: (location: { lat: number; lng: number }) => void;
 }
@@ -63,6 +65,37 @@ const login = async (email: string, password: string) => {
       setIsLoading(false);
     }); 
 };
+
+const updatedUser = async (userData: Partial<User>) => {
+  setIsLoading(true);
+  const usersRef = collection(db, 'users');
+  const q = query(usersRef, where('id', '==', user?.id));
+  const querySnapshot = await getDocs(q);
+  updateDoc(querySnapshot.docs[0].ref, {...userData}).then(() => {
+    setUser(userData as User);
+    showToast('success','Usuário atualizado com sucesso!');
+  }).catch((error) => {
+    showToast('error','Erro ao atualizar usuário!');
+  }).finally(() => {
+    setIsLoading(false);
+  });
+}
+
+const updatePhoto = async (photo: string) => {
+  setIsLoading(true);
+  const usersRef = collection(db, 'users');
+  const q = query(usersRef, where('id', '==', user?.id));
+  const querySnapshot = await getDocs(q);
+  updateDoc(querySnapshot.docs[0].ref, {photo}).then(() => {
+    setUser({...user, photo} as User);
+    showToast('success','Foto de perfil atualizada com sucesso!');
+  }).catch((error) => {
+    showToast('error','Erro ao atualizar foto de perfil!');
+  }).finally(() => {
+    setIsLoading(false);
+  });
+}
+
 
 const register = async (userData: Partial<User>, password: string) => {
     setIsLoading(true);
@@ -116,6 +149,8 @@ const register = async (userData: Partial<User>, password: string) => {
     isLoading,
     login,
     register,
+    updatedUser,
+    updatePhoto,
     logout,
     updateUserLocation
   };
