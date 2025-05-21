@@ -159,10 +159,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
       onRequestClose={onClose}
       statusBarTranslucent
     >
-      <TouchableOpacity 
-        className="flex-1 bg-black/50 justify-end" 
-        activeOpacity={1} 
-      >
         <View className={`bg-white rounded-t-3xl ${Platform.OS === 'ios' ? 'pb-8' : 'pb-4'}`}>
           <View className="w-12 h-1 bg-gray-300 rounded-full mx-auto mt-3 mb-4" />
           
@@ -186,14 +182,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
                 value={settings.darkMode}
                 onValueChange={() => toggleSetting('darkMode')}
               />
-              <SettingItem
-                icon="autorenew"
-                label="Sincronização automática"
-                description="Sincronizar dados automaticamente"
-                value={settings.autoSync}
-                onValueChange={() => toggleSetting('autoSync')}
-              />
-
               <SectionHeader title="Segurança" />
               <SettingItem
                 icon="fingerprint"
@@ -209,10 +197,24 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
                 description="Permitir acesso à sua localização"
                 value={settings.locationAccess}
                 onValueChange={() => toggleSetting('locationAccess')}
-                disabled={true} // Exemplo de condição para desabilitar
+                disabled={true} 
               />
-            <OptionButton label="Alterar Email" onPress={() => openModal('email')} />
-            <OptionButton label="Alterar Senha" onPress={() => openModal('password')} />
+               <SettingItem
+                icon="email"
+                label="Alterar Email"
+                description="Modifique seu e-mail de acesso"
+                value={true}
+                onValueChange={() => openModal('email')}
+                disabled={false} 
+              />
+               <SettingItem
+                icon="email"
+                label="Alterar Palavra passe"
+                description="Modifique sua palavra passe de acesso"
+                value={true}
+                onValueChange={() => openModal('password')}
+                disabled={false} 
+              />
               <TouchableOpacity
                 className="mt-6 bg-red-50 p-4 rounded-xl items-center"
                 onPress={() => {
@@ -224,7 +226,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
             </View>
           </ScrollView>
         </View>
-      </TouchableOpacity>
     </Modal>
   
        {/* Modal Centralizado com Blur */}

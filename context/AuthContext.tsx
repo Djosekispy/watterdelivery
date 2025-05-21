@@ -9,13 +9,14 @@ import { addDoc, collection, getDocs, query, Timestamp, updateDoc, where } from 
 import Toast from '@/components/ui/toast';
 import LoadingModal from '@/components/ui/loading';
 import { clearUserFromStorage, getUserFromStorage, saveUserToStorage } from '@/services/storage';
+import { LocationContext } from './LocationContext';
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (user: Partial<User>, password: string) => Promise<void>;
-  updatedUser : (user : Partial<User>)=> Promise<void>;
+  updatedUser : (user : Partial<User>, message ? : string)=> Promise<void>;
   updatePhoto : (photo : string)=> Promise<void>;
   logout: () => void;
   updateUserLocation: (location: { lat: number; lng: number }) => void;
@@ -31,7 +32,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' as 'success' | 'error' });
-    
+  const { location, errorMsg, loading } = useContext(LocationContext);
+  const userLocation = {
+    lat: location?.coords.latitude as number,
+    lng: location?.coords.longitude as number,
+  }
   const showToast = (type: 'success' | 'error', message : string) => {
     setToast({visible: true, message, type });
   };
@@ -40,12 +45,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    useEffect(() => {
     const loadUser = async () => {
       const savedUser = await getUserFromStorage();
-      if (savedUser) {
-        setUser(savedUser);
-      } else {
+      setTimeout(()=>{
         router.push('/(home)/');
-      }
-      setIsLoading(false);
+        setIsLoading(false);
+      },3000);
+      setUser(savedUser);
     };
     loadUser();
   }, []);
@@ -58,10 +62,11 @@ const login = async (email: string, password: string) => {
       const usersRef = collection(db, 'users');
       const q = query(usersRef, where('email', '==', email));
       const querySnapshot = await getDocs(q);
-        const userDoc = querySnapshot.docs[0];
-        setUser(userDoc.data() as User);
-        await saveUserToStorage(userDoc.data());
-        router.push("/(home)/");
+      const userDoc = querySnapshot.docs[0];
+      setUser(userDoc.data() as User);
+      await saveUserToStorage(userDoc.data());
+      await updatedUser({online : true , location : userLocation},'Bem vindo de volta!')
+      router.push("/(home)/");
     }).catch((error) => {
       showToast('error',`${error}`);
     }).finally(() => {
@@ -69,7 +74,7 @@ const login = async (email: string, password: string) => {
     }); 
 };
 
-const updatedUser = async (userData: Partial<User>) => {
+const updatedUser = async (userData: Partial<User>, message ? : string) => {
   setIsLoading(true);
   const usersRef = collection(db, 'users');
   const q = query(usersRef, where('id', '==', user?.id));
@@ -79,9 +84,8 @@ const updatedUser = async (userData: Partial<User>) => {
     auth.currentUser && updateProfile(auth.currentUser, {
       displayName: userData.name,
     });
-
     await saveUserToStorage({...userData});
-    showToast('success','Usuário atualizado com sucesso!');
+    showToast('success', message ?? 'Usuário atualizado com sucesso!');
   }).catch((error) => {
     showToast('error','Erro ao atualizar usuário!');
   }).finally(() => {
@@ -120,6 +124,10 @@ const register = async (userData: Partial<User>, password: string) => {
         name: userData.name || '',
         email: userData.email || '',
         password: '', 
+        online : true,
+        location: userLocation,
+        phone: userData.phone || '',
+        address: userData.address || '',
         photo: firebaseUser.photoURL || '',
         userType: userData.userType || 'consumer',
         createdAt : Timestamp.now().toDate(),
@@ -139,6 +147,7 @@ const register = async (userData: Partial<User>, password: string) => {
   };
 
   const logout = async () => {
+    await updatedUser({online : false},'Até Breve!')
     await signOut(auth);
     await clearUserFromStorage();
     setUser(null);

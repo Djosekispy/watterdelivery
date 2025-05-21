@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import {
   View,
   Text,
@@ -14,16 +14,23 @@ import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { auth } from '@/services/firebase';
+import { LocationContext } from '@/context/LocationContext';
 
 interface ProfileModalProps {
   visible: boolean;
   onClose: () => void;
 }
 
-const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose }) => {
+const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose}) => {
   const { user, updatedUser } = useAuth();
+
+  const { location, errorMsg, loading } = useContext(LocationContext);
   const router = useRouter();
   const defaultImage = 'https://cdn3.iconfinder.com/data/icons/business-avatar-1/512/3_avatar-512.png';
+  const userLocation = {
+    lat: location?.coords.latitude as number,
+    lng: location?.coords.longitude as number,
+  }
 
   const ProfileSection = () => (
     <View className="flex-row items-center mb-6 px-4 mx-4">
@@ -149,7 +156,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose }) => {
                   color="bg-sky-400"
                   onPress={ async () => {
                     onClose();
-                    await updatedUser({userType : 'supplier'})
+                    await updatedUser({userType : 'supplier',location : userLocation},'Parabéns você agora é um fornecedor!')
                     router.push('/(home)/profile')
                   }}
                 />}

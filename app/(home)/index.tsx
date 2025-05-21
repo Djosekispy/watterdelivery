@@ -55,7 +55,7 @@ const HomeScreen = () => {
 
   return (
     <View className="flex-1">
-      <ProfileModal visible={showProfile} onClose={() => setShowProfile(false)} />
+      <ProfileModal  visible={showProfile} onClose={() => setShowProfile(false)} />
       <SettingsModal visible={showSettings} onClose={() => setShowSettings(false)} />
 
       {/* Dropdown para seleção do tipo de mapa */}

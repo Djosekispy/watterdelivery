@@ -14,6 +14,7 @@ export interface User {
     lng: number;
   };
   phone?: string;
+  online ? : boolean;
   address?: string;
   pricePerLiter?: number;
 }
