@@ -8,6 +8,7 @@ import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, up
 import { addDoc, collection, getDocs, query, Timestamp, updateDoc, where } from "firebase/firestore"; 
 import Toast from '@/components/ui/toast';
 import LoadingModal from '@/components/ui/loading';
+import { clearUserFromStorage, getUserFromStorage, saveUserToStorage } from '@/services/storage';
 
 interface AuthContextType {
   user: User | null;
@@ -36,17 +37,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
    const router = useRouter();
 
-  useEffect(() => {
-    const savedUser = SecureStore.getItem(CURRENT_USER_KEY);
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-    setIsLoading(false);
-
-  if(!user){
-    router.push('/(home)/');
-  }
+   useEffect(() => {
+    const loadUser = async () => {
+      const savedUser = await getUserFromStorage();
+      if (savedUser) {
+        setUser(savedUser);
+      } else {
+        router.push('/(home)/');
+      }
+      setIsLoading(false);
+    };
+    loadUser();
   }, []);
+  
 
 const login = async (email: string, password: string) => {
     setIsLoading(true);
@@ -57,7 +60,7 @@ const login = async (email: string, password: string) => {
       const querySnapshot = await getDocs(q);
         const userDoc = querySnapshot.docs[0];
         setUser(userDoc.data() as User);
-        SecureStore.setItem(CURRENT_USER_KEY, JSON.stringify(userDoc.data()));
+        await saveUserToStorage(userDoc.data());
         router.push("/(home)/");
     }).catch((error) => {
       showToast('error',`${error}`);
@@ -71,12 +74,13 @@ const updatedUser = async (userData: Partial<User>) => {
   const usersRef = collection(db, 'users');
   const q = query(usersRef, where('id', '==', user?.id));
   const querySnapshot = await getDocs(q);
-  updateDoc(querySnapshot.docs[0].ref, {...userData}).then(() => {
+  updateDoc(querySnapshot.docs[0].ref, {...userData}).then( async() => {
     setUser(userData as User);
     auth.currentUser && updateProfile(auth.currentUser, {
       displayName: userData.name,
     });
-    SecureStore.setItem(CURRENT_USER_KEY, JSON.stringify({...userData}));
+
+    await saveUserToStorage({...userData});
     showToast('success','Usuário atualizado com sucesso!');
   }).catch((error) => {
     showToast('error','Erro ao atualizar usuário!');
@@ -90,9 +94,9 @@ const updatePhoto = async (photo: string) => {
   const usersRef = collection(db, 'users');
   const q = query(usersRef, where('id', '==', user?.id));
   const querySnapshot = await getDocs(q);
-  updateDoc(querySnapshot.docs[0].ref, {photo}).then(() => {
+  updateDoc(querySnapshot.docs[0].ref, {photo}).then(async() => {
     setUser({...user, photo} as User);
-    SecureStore.setItem(CURRENT_USER_KEY, JSON.stringify({...user, photo}));
+    await saveUserToStorage({...user, photo});
     showToast('success','Foto de perfil atualizada com sucesso!');
   }).catch((error) => {
     showToast('error','Erro ao atualizar foto de perfil!');
@@ -136,6 +140,7 @@ const register = async (userData: Partial<User>, password: string) => {
 
   const logout = async () => {
     await signOut(auth);
+    await clearUserFromStorage();
     setUser(null);
   };
 

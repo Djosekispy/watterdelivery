@@ -50,7 +50,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ name, photo, email
   };
 
   return (
-    <View className="items-center mb-6 relative">
+    <View className="items-center relative">
       <View className="relative">
         <Image
           source={{ uri: photoURL || user?.photo}}
