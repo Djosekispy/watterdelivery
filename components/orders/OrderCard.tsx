@@ -55,7 +55,7 @@ const OrderCard = ({ order, isSupplier = false }: OrderCardProps) => {
       </View>
 
       <TouchableOpacity
-        onPress={() => router.push(`/orders/${order.id}`)}
+        onPress={() => router.push(`/(home)/${order.id}`)}
         className="flex-row items-center justify-center py-2 bg-blue-50 rounded-lg mt-2"
       >
         <MaterialIcons name={action.icon} size={18} color="#3b82f6" />

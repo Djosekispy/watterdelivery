@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Order, OrderStatus, Notification } from '@/types';
 import { useAuth } from './AuthContext';
 import { 
@@ -12,7 +12,8 @@ import {
   onSnapshot,
   writeBatch,
   serverTimestamp,
-  Timestamp
+  Timestamp,
+  getDoc
 } from 'firebase/firestore';
 import { Alert } from 'react-native';
 import { db } from '@/services/firebase';
@@ -23,6 +24,7 @@ type OrderContextProps = {
   unreadCount: number;
   loading: boolean;
   error: string | null;
+  getOrderById : (orderId: string) => Promise<Order>;
   createOrder: (orderData: Omit<Order, 'id' | 'createdAt' | 'status'>) => Promise<void>;
   updateOrderStatus: (orderId: string, status: OrderStatus) => Promise<void>;
   acceptOrder: (orderId: string) => Promise<void>;
@@ -290,6 +292,33 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  const getOrderById = useCallback(async (orderId: string): Promise<Order> => {
+    try {
+      setLoading(true);
+      const orderRef = doc(db, 'orders', orderId);
+      const orderSnap = await getDoc(orderRef);
+  
+      if (!orderSnap.exists()) {
+        throw new Error('Pedido não encontrado');
+      }
+  
+      const orderData = orderSnap.data();
+      return {
+        id: orderSnap.id,
+        ...orderData,
+        createdAt: convertTimestamp(orderData.createdAt),
+        acceptedAt: convertTimestamp(orderData.acceptedAt),
+        deliveredAt: convertTimestamp(orderData.deliveredAt),
+        canceledAt: convertTimestamp(orderData.canceledAt),
+      } as Order;
+    } catch (error) {
+      console.error('Erro ao buscar pedido:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const fetchConsumerOrders = async (consumerId: string): Promise<Order[]> => {
     try {
       setLoading(true);
@@ -336,6 +365,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         unreadCount,
         loading,
         error,
+        getOrderById,
         createOrder,
         updateOrderStatus,
         acceptOrder,

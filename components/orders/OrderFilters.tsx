@@ -47,12 +47,9 @@ const OrderFilters = ({ onFilterChange }: OrderFiltersProps) => {
 
   return (
     <View className="bg-white p-4 rounded-lg shadow-sm mb-4">
-      <Text className="font-medium text-gray-700 mb-2">Filtrar por:</Text>
-      
       {/* Filtro de Status */}
       <View className="mb-4">
-        <Text className="text-gray-600 mb-2">Status</Text>
-        <View className="flex-row flex-wrap">
+        <View className="flex-row flex-wrap justify-center">
           {statusOptions.map((option) => (
             <TouchableOpacity
               key={option.value}

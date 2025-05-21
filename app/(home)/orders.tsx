@@ -55,7 +55,7 @@ const OrdersScreen = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
-      <View className="px-4 pt-4">
+      <View className="px-4 pt-10">
         <View className="flex-row items-center justify-between mb-4">
           <TouchableOpacity onPress={() => router.back()}>
             <MaterialCommunityIcons name="arrow-left" size={24} color="#4b5563" />
