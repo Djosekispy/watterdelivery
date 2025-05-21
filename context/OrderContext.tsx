@@ -1,201 +1,348 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import { User, Order, OrderStatus, Notification } from '@/types';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { Order, OrderStatus, Notification } from '@/types';
 import { useAuth } from './AuthContext';
-import * as SecureStore from 'expo-secure-store';
+import { 
+  collection, 
+  doc, 
+  setDoc, 
+  updateDoc, 
+  getDocs, 
+  query, 
+  where, 
+  onSnapshot,
+  writeBatch,
+  serverTimestamp,
+  Timestamp
+} from 'firebase/firestore';
+import { Alert } from 'react-native';
+import { db } from '@/services/firebase';
 
-// Tipo para localização geográfica
-type Location = {
-  lat: number;
-  lng: number;
-};
-
-// Tipagem do contexto
-interface OrderContextProps {
+type OrderContextProps = {
   orders: Order[];
   notifications: Notification[];
-  unreadNotificationsCount: number;
-  getRecentOrders: () => Order[];
-  getOrderById: (id: string) => Order | undefined;
-  getNearbySuppliers: (userLocation: Location) => User[];
-  createOrder: (orderData: Partial<Order>) => Promise<void>;
+  unreadCount: number;
+  loading: boolean;
+  error: string | null;
+  createOrder: (orderData: Omit<Order, 'id' | 'createdAt' | 'status'>) => Promise<void>;
   updateOrderStatus: (orderId: string, status: OrderStatus) => Promise<void>;
-  acceptOrder: (orderId: string, supplierId: string) => Promise<void>;
-  markNotificationAsRead: (notificationId: string) => void;
-}
+  acceptOrder: (orderId: string) => Promise<void>;
+  cancelOrder: (orderId: string) => Promise<void>;
+  markNotificationAsRead: (notificationId: string) => Promise<void>;
+  fetchSupplierOrders: (supplierId: string) => Promise<Order[]>;
+  fetchConsumerOrders: (consumerId: string) => Promise<Order[]>;
+};
 
-// Criação do contexto
 const OrderContext = createContext<OrderContextProps | undefined>(undefined);
 
-// Provider do contexto
 export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const [orders, setOrders] = useState<Order[]>(() => {
-    const stored = SecureStore.getItem('agua_expressa_orders');
-    return stored ? JSON.parse(stored) : [];
-  });
+  // Converter Firestore Timestamp para Date
+  const convertTimestamp = (timestamp: Timestamp | Date | undefined): Date | undefined => {
+    if (!timestamp) return undefined;
+    if (timestamp instanceof Date) return timestamp;
+    return timestamp.toDate();
+  };
 
-  const [notifications, setNotifications] = useState<Notification[]>(() => {
-    const stored = SecureStore.getItem('agua_expressa_notifications');
-    return stored ? JSON.parse(stored) : [];
-  });
+  // Ouvir mudanças nos pedidos em tempo real
+  useEffect(() => {
+    if (!user) return;
 
-  const saveOrdersToSecureStore = useCallback((newOrders: Order[]) => {
-    SecureStore.setItem('agua_expressa_orders', JSON.stringify(newOrders));
-  }, []);
-
-  const saveNotificationsToSecureStore = useCallback((newNotifications: Notification[]) => {
-    SecureStore.setItem('agua_expressa_notifications', JSON.stringify(newNotifications));
-  }, []);
-
-  const getRecentOrders = useCallback(() => {
-    if (!user) return [];
-
-    return user.userType === 'consumer'
-      ? orders.filter(order => order.consumerId === user.id)
-      : orders.filter(order => order.supplierId === user.id || order.status === 'pending');
-  }, [user, orders]);
-
-  const getOrderById = useCallback((id: string) => {
-    return orders.find(order => order.id === id);
-  }, [orders]);
-
-  const getNearbySuppliers = useCallback((userLocation: Location) => {
-    const usersJson = SecureStore.getItem('agua_expressa_users') || '[]';
-    const users = JSON.parse(usersJson) as User[];
-
-    const suppliers = users
-      .filter(user => user.userType === 'supplier')
-      .map(supplier => {
-        const location = (supplier as any).location as Location;
-        const distanceKm = calculateDistance(
-          userLocation.lat, userLocation.lng,
-          location.lat, location.lng
-        );
-        return { ...supplier, distanceKm };
-      })
-      .sort((a: any, b: any) => a.distanceKm - b.distanceKm);
-
-    return suppliers;
-  }, []);
-
-  const createOrder = useCallback(async (orderData: Partial<Order>) => {
-    if (!user) throw new Error('User not authenticated');
-
-    const newOrder: Order = {
-      id: Math.random().toString(36).substring(2, 15),
-      consumerId: user.id,
-      createdAt: new Date(),
-      status: 'pending',
-      ...orderData,
-    } as Order;
-
-    const updatedOrders = [...orders, newOrder];
-    setOrders(updatedOrders);
-    saveOrdersToSecureStore(updatedOrders);
-
-    // Notificar fornecedores
-    const usersJson = SecureStore.getItem('agua_expressa_users') || '[]';
-    const users = JSON.parse(usersJson) as User[];
-    const suppliers = users.filter(u => u.userType === 'supplier');
-
-    const newNotifications = suppliers.map(supplier => ({
-      id: Math.random().toString(36).substring(2, 15),
-      userId: supplier.id,
-      title: 'Novo pedido próximo',
-      message: 'Novo pedido de água próximo a você!',
-      relatedOrderId: newOrder.id,
-      createdAt: new Date(),
-      read: false,
-    }));
-
-    const updatedNotifications = [...notifications, ...newNotifications];
-    setNotifications(updatedNotifications);
-    saveNotificationsToSecureStore(updatedNotifications);
-  }, [user, orders, notifications, saveOrdersToSecureStore, saveNotificationsToSecureStore]);
-
-  const updateOrderStatus = useCallback(async (orderId: string, status: OrderStatus) => {
-    const updatedOrders = orders.map(order =>
-      order.id === orderId
-        ? { ...order, status, updatedAt: new Date() }
-        : order
+    setLoading(true);
+    const ordersQuery = query(
+      collection(db, 'orders'),
+      where(user.userType === 'supplier' ? 'supplierId' : 'consumerId', '==', user.id)
     );
 
-    setOrders(updatedOrders);
-    saveOrdersToSecureStore(updatedOrders);
+    const unsubscribeOrders = onSnapshot(ordersQuery, (snapshot) => {
+      const ordersData = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          createdAt: convertTimestamp(data.createdAt),
+          acceptedAt: convertTimestamp(data.acceptedAt),
+          deliveredAt: convertTimestamp(data.deliveredAt),
+          canceledAt: convertTimestamp(data.canceledAt),
+        } as Order;
+      });
+      setOrders(ordersData);
+      setLoading(false);
+    }, (err) => {
+      setError(err as any);
+      setLoading(false);
+    });
 
-    const order = orders.find(o => o.id === orderId);
-    if (order) {
-      const notification: Notification = {
-        id: Math.random().toString(36).substring(2, 15),
-        userId: order.consumerId,
-        title: 'Atualização do pedido',
-        message: `Seu pedido foi ${status}!`,
-        relatedOrderId: order.id,
+    return () => unsubscribeOrders();
+  }, [user]);
+
+  // Ouvir notificações em tempo real
+  useEffect(() => {
+    if (!user) return;
+
+    const notificationsQuery = query(
+      collection(db, 'notifications'),
+      where('userId', '==', user.id),
+      where('read', '==', false)
+    );
+
+    const unsubscribeNotifications = onSnapshot(notificationsQuery, (snapshot) => {
+      const notificationsData = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          createdAt: convertTimestamp(data.createdAt),
+        } as Notification;
+      });
+      setNotifications(notificationsData);
+    });
+
+    return () => unsubscribeNotifications();
+  }, [user]);
+
+  const createOrder = async (orderData: Omit<Order, 'id' | 'createdAt' | 'status'>) => {
+    try {
+      if (!user) throw new Error('Usuário não autenticado');
+
+      setLoading(true);
+      
+      // 1. Criar o pedido
+      const orderRef = doc(collection(db, 'orders'));
+      const newOrder: Order = {
+        ...orderData,
+        id: orderRef.id,
+        status: 'pending',
         createdAt: new Date(),
-        read: false,
       };
 
-      const updatedNotifications = [...notifications, notification];
-      setNotifications(updatedNotifications);
-      saveNotificationsToSecureStore(updatedNotifications);
-    }
-  }, [orders, notifications, saveOrdersToSecureStore, saveNotificationsToSecureStore]);
+      await setDoc(orderRef, {
+        ...newOrder,
+        createdAt: serverTimestamp(),
+      });
 
-  const acceptOrder = useCallback(async (orderId: string, supplierId: string) => {
-    const updatedOrders = orders.map(order =>
-      order.id === orderId
-        ? { ...order, supplierId, status: 'accepted', acceptedAt: new Date() }
-        : order
-    );
+      // 2. Criar notificações
+      const batch = writeBatch(db);
+      
+      // Notificação para o fornecedor
+      if (orderData.supplierId) {
+        const supplierNotificationRef = doc(collection(db, 'notifications'));
+        batch.set(supplierNotificationRef, {
+          userId: orderData.supplierId,
+          title: 'Novo Pedido Recebido',
+          message: `Novo pedido de ${orderData.quantity} litros`,
+          read: false,
+          relatedOrderId: orderRef.id,
+          createdAt: serverTimestamp(),
+        });
+      }
 
-    setOrders(updatedOrders as any);
-    saveOrdersToSecureStore(updatedOrders as any);
-
-    const order = orders.find(o => o.id === orderId);
-    if (order) {
-      const notification: Notification = {
-        id: Math.random().toString(36).substring(2, 15),
-        userId: order.consumerId,
-        title: 'Pedido aceito',
-        message: 'Seu pedido foi aceito!',
-        relatedOrderId: order.id,
-        createdAt: new Date(),
+      // Notificação para o consumidor
+      const consumerNotificationRef = doc(collection(db, 'notifications'));
+      batch.set(consumerNotificationRef, {
+        userId: user.id,
+        title: 'Pedido Criado',
+        message: 'Seu pedido foi registrado com sucesso',
         read: false,
+        relatedOrderId: orderRef.id,
+        createdAt: serverTimestamp(),
+      });
+
+      await batch.commit();
+      
+      Alert.alert('Sucesso', 'Pedido criado com sucesso!');
+    } catch (err) {
+      setError(err as any);
+      Alert.alert('Erro', 'Falha ao criar pedido');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateOrderStatus = async (orderId: string, status: OrderStatus) => {
+    try {
+      setLoading(true);
+      const orderRef = doc(db, 'orders', orderId);
+      
+      const updateData: Partial<Order> = { 
+        status,
+        ...(status === 'accepted' && { acceptedAt: new Date() }),
+        ...(status === 'in_transit' && { inTransitAt: new Date() }),
+        ...(status === 'delivered' && { deliveredAt: new Date() }),
+        ...(status === 'canceled' && { canceledAt: new Date() }),
       };
 
-      const updatedNotifications = [...notifications, notification];
-      setNotifications(updatedNotifications);
-      saveNotificationsToSecureStore(updatedNotifications);
+      await updateDoc(orderRef, {
+        ...updateData,
+        ...(status === 'accepted' && { acceptedAt: serverTimestamp() }),
+        ...(status === 'in_transit' && { inTransitAt: serverTimestamp() }),
+        ...(status === 'delivered' && { deliveredAt: serverTimestamp() }),
+        ...(status === 'canceled' && { canceledAt: serverTimestamp() }),
+      });
+
+      // Criar notificação
+      const order = orders.find(o => o.id === orderId);
+      if (order) {
+        const notificationRef = doc(collection(db, 'notifications'));
+        await setDoc(notificationRef, {
+          userId: order.consumerId,
+          title: `Pedido ${status}`,
+          message: `Seu pedido foi atualizado para: ${translateStatus(status)}`,
+          read: false,
+          relatedOrderId: orderId,
+          createdAt: serverTimestamp(),
+        });
+      }
+    } catch (err) {
+      setError(err as any);
+      Alert.alert('Erro', 'Falha ao atualizar pedido');
+    } finally {
+      setLoading(false);
     }
-  }, [orders, notifications, saveOrdersToSecureStore, saveNotificationsToSecureStore]);
+  };
 
-  const markNotificationAsRead = useCallback((notificationId: string) => {
-    const updatedNotifications = notifications.map(notification =>
-      notification.id === notificationId
-        ? { ...notification, read: true }
-        : notification
-    );
+  const acceptOrder = async (orderId: string) => {
+    if (!user || user.userType !== 'supplier') {
+      Alert.alert('Erro', 'Apenas fornecedores podem aceitar pedidos');
+      return;
+    }
 
-    setNotifications(updatedNotifications);
-    saveNotificationsToSecureStore(updatedNotifications);
-  }, [notifications, saveNotificationsToSecureStore]);
+    try {
+      setLoading(true);
+      const orderRef = doc(db, 'orders', orderId);
+      
+      await updateDoc(orderRef, {
+        status: 'accepted',
+        supplierId: user.id,
+        acceptedAt: serverTimestamp(),
+      });
 
-  const unreadNotificationsCount = notifications.filter(n => !n.read && n.userId === user?.id).length;
+      // Notificar o consumidor
+      const order = orders.find(o => o.id === orderId);
+      if (order) {
+        const notificationRef = doc(collection(db, 'notifications'));
+        await setDoc(notificationRef, {
+          userId: order.consumerId,
+          title: 'Pedido Aceito',
+          message: `Seu pedido foi aceito por ${user.name}`,
+          read: false,
+          relatedOrderId: orderId,
+          createdAt: serverTimestamp(),
+        });
+      }
+    } catch (err) {
+      setError(err as any);
+      Alert.alert('Erro', 'Falha ao aceitar pedido');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const cancelOrder = async (orderId: string) => {
+    try {
+      setLoading(true);
+      await updateOrderStatus(orderId, 'canceled');
+    } catch (err) {
+      setError(err as any);
+      Alert.alert('Erro', 'Falha ao cancelar pedido');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const markNotificationAsRead = async (notificationId: string) => {
+    try {
+      const notificationRef = doc(db, 'notifications', notificationId);
+      await updateDoc(notificationRef, {
+        read: true,
+      });
+    } catch (err) {
+      setError(err as any);
+    }
+  };
+
+  const fetchSupplierOrders = async (supplierId: string): Promise<Order[]> => {
+    try {
+      setLoading(true);
+      const q = query(collection(db, 'orders'), where('supplierId', '==', supplierId));
+      const snapshot = await getDocs(q);
+      
+      return snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          createdAt: convertTimestamp(data.createdAt),
+          acceptedAt: convertTimestamp(data.acceptedAt),
+          deliveredAt: convertTimestamp(data.deliveredAt),
+          canceledAt: convertTimestamp(data.canceledAt),
+        } as Order;
+      });
+    } catch (err) {
+      setError(err as any);
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchConsumerOrders = async (consumerId: string): Promise<Order[]> => {
+    try {
+      setLoading(true);
+      const q = query(collection(db, 'orders'), where('consumerId', '==', consumerId));
+      const snapshot = await getDocs(q);
+      
+      return snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          createdAt: convertTimestamp(data.createdAt),
+          acceptedAt: convertTimestamp(data.acceptedAt),
+          deliveredAt: convertTimestamp(data.deliveredAt),
+          canceledAt: convertTimestamp(data.canceledAt),
+        } as Order;
+      });
+    } catch (err) {
+      setError(err as any);
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const translateStatus = (status: OrderStatus): string => {
+    const translations = {
+      pending: 'Pendente',
+      accepted: 'Aceito',
+      in_transit: 'Em Trânsito',
+      delivered: 'Entregue',
+      canceled: 'Cancelado',
+    };
+    return translations[status] || status;
+  };
+
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
     <OrderContext.Provider
       value={{
         orders,
         notifications,
-        unreadNotificationsCount,
-        getRecentOrders,
-        getOrderById,
-        getNearbySuppliers,
+        unreadCount,
+        loading,
+        error,
         createOrder,
         updateOrderStatus,
         acceptOrder,
+        cancelOrder,
         markNotificationAsRead,
+        fetchSupplierOrders,
+        fetchConsumerOrders,
       }}
     >
       {children}
@@ -203,24 +350,10 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   );
 };
 
-// Hook para usar o contexto
 export const useOrders = () => {
   const context = useContext(OrderContext);
-  if (!context) throw new Error('useOrders must be used within an OrderProvider');
+  if (!context) {
+    throw new Error('useOrders must be used within an OrderProvider');
+  }
   return context;
 };
-
-// Utilitário para calcular distância entre dois pontos
-const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-  const R = 6371; // km
-  const dLat = deg2rad(lat2 - lat1);
-  const dLon = deg2rad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
-    Math.sin(dLon / 2) ** 2;
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-};
-
-const deg2rad = (deg: number): number => deg * (Math.PI / 180);

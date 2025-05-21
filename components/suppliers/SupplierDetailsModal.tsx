@@ -81,7 +81,7 @@ const SupplierDetailsModal = ({ visible, supplier, onClose, onOrderPress }: Supp
             <TouchableOpacity
               onPress={onOrderPress}
               className="px-4 py-2 bg-blue-600 rounded-lg"
-              disabled={!supplier.online}
+            //  disabled={!supplier.online}
             >
               <Text className="text-white">Fazer Pedido</Text>
             </TouchableOpacity>

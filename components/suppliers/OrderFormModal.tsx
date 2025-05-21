@@ -4,13 +4,14 @@ import { Order, OrderStatus, Supplier } from '../../types';
 
 interface OrderFormModalProps {
   visible: boolean;
+  loading?: boolean;
   supplier: Supplier | null;
   onClose: () => void;
-  onSubmit: (order: Omit<Order, 'id' | 'createdAt' | 'status'>) => void;
+  onSubmit: (order: Omit<Order, 'id'>) => void;
   userLocation: { lat: number; lng: number } | null;
 }
 
-const OrderFormModal = ({ visible, supplier, onClose, onSubmit, userLocation }: OrderFormModalProps) => {
+const OrderFormModal = ({ visible, supplier, onClose, onSubmit, userLocation,   loading = false }: OrderFormModalProps) => {
   const [quantity, setQuantity] = useState('');
   const [address, setAddress] = useState('');
 
@@ -39,6 +40,7 @@ const OrderFormModal = ({ visible, supplier, onClose, onSubmit, userLocation }: 
         lng: userLocation.lng,
       },
       price: quantityNumber * supplier.pricePerLiter,
+      createdAt: new Date(),
     });
 
     onClose();
@@ -89,15 +91,19 @@ const OrderFormModal = ({ visible, supplier, onClose, onSubmit, userLocation }: 
           <View className="flex-row justify-between mt-4">
             <TouchableOpacity
               onPress={onClose}
+              disabled={loading}
               className="px-4 py-2 border border-gray-300 rounded-lg"
             >
               <Text className="text-gray-700">Cancelar</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={handleSubmit}
+              disabled={loading}
               className="px-4 py-2 bg-blue-600 rounded-lg"
             >
-              <Text className="text-white">Confirmar Pedido</Text>
+           <Text className="text-white">
+          {loading ? 'Enviando...' : 'Confirmar Pedido'}
+        </Text>
             </TouchableOpacity>
           </View>
         </View>

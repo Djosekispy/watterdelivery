@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, SafeAreaView, Text, TouchableOpacity } from 'react-native';
+import { View, SafeAreaView, Text, TouchableOpacity, Alert } from 'react-native';
 import * as Location from 'expo-location';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { getDistance} from 'geolib';
@@ -13,6 +13,9 @@ import { GOOGLE_MAPS_API_KEY } from '@/config/google-maps-key';
 import { db } from '@/services/firebase';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useOrders } from '@/context/OrderContext';
+import { useAuth } from '@/context/AuthContext';
+
 
 const SupplierListScreen = () => {
   const navigate = useRouter()
@@ -24,7 +27,9 @@ const SupplierListScreen = () => {
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showOrderForm, setShowOrderForm] = useState(false);
-  
+  const { user } = useAuth();
+  const { createOrder, loading: orderLoading } = useOrders();
+
   const [filters, setFilters] = useState({
     maxPrice: null as number | null,
     maxDistance: null as number | null,
@@ -186,9 +191,28 @@ const SupplierListScreen = () => {
     setShowOrderForm(true);
   };
 
-  const handleSubmitOrder = (order: Omit<Order, 'id' | 'createdAt' | 'status'>) => {
-    console.log('Pedido enviado:', order);
-    setShowOrderForm(false);
+  const handleSubmitOrder = async (order: Omit<Order, 'id' | 'createdAt' | 'status'>) => {
+    if (!user) {
+      Alert.alert('Erro', 'Você precisa estar logado para fazer um pedido');
+      setShowOrderForm(false);
+      return;
+    }
+
+    try {
+      await createOrder({
+        ...order,
+        consumerId: user.id,
+      });
+      
+      Alert.alert('Sucesso', 'Pedido criado com sucesso!');
+      setShowOrderForm(false);
+      
+      // Opcional: navegar para tela de acompanhamento do pedido
+      // navigate.push(`/orders/${orderId}`);
+    } catch (error) {
+      console.error('Erro ao criar pedido:', error);
+      Alert.alert('Erro', 'Não foi possível criar o pedido. Tente novamente.');
+    }
   };
 
   return (
@@ -230,12 +254,13 @@ const SupplierListScreen = () => {
         onOrderPress={handleOrderPress}
       />
 
-      <OrderFormModal
+<OrderFormModal
         visible={showOrderForm}
         supplier={selectedSupplier}
         onClose={() => setShowOrderForm(false)}
         onSubmit={handleSubmitOrder}
         userLocation={userLocation}
+        loading={orderLoading}
       />
     </SafeAreaView>
   );
