@@ -11,7 +11,11 @@ import { AuthProvider } from '@/context/AuthContext';
 import { Stack } from 'expo-router';
 import { OrderProvider } from '@/context/OrderContext';
 import { LocationProvider } from '@/context/LocationContext';
+import 'react-native-get-random-values';
+import { polyfillWebCrypto } from 'expo-standard-web-crypto';
+import '@/shim';
 
+polyfillWebCrypto();
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {

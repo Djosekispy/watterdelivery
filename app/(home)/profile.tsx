@@ -79,12 +79,12 @@ const ProfileScreen = () => {
               onChangeText={() =>
                 Alert.alert(
                   'Editar Email',
-                  'Email não pode ser alterado. Para isso, vá até as configurações.',
+                  'aceda as configurações para alterar seu email',
                   [
                     { text: 'Cancelar', style: 'cancel' },
                     {
                       text: 'Configurações',
-                      onPress: () => navigation.push('(home)/settings'),
+                      onPress: () => navigation.push('/(home)/'),
                     },
                   ]
                 )
