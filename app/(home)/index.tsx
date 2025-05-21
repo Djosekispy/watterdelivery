@@ -9,6 +9,7 @@ import DropDownPicker from 'react-native-dropdown-picker';
 import SettingsModal from '@/components/screens/settings';
 import ProfileModal from '@/components/screens/ProfileModal';
 import MapsAnimation from '@/components/ui/location-search';
+import { useOrders } from '@/context/OrderContext';
 
 
 
@@ -25,6 +26,7 @@ const HomeScreen = () => {
   const [mapType, setMapType] = useState<MapType>('standard');
   const [showSettings, setShowSettings] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
+  const {  unreadCount } = useOrders();
   const { location, errorMsg, loading } = useContext(LocationContext);
   const [showProfile, setShowProfile] = useState(false);
   const [mapReady, setMapReady] = useState(false);
@@ -41,7 +43,7 @@ const HomeScreen = () => {
 
  const menuOptions: MenuOption[] = [
   user && { icon: 'account', label: 'Perfil', action: () => setShowProfile(true) },
-  user &&{ icon: 'history', label: 'Histórico', action: () => setShowProfile(true) },
+  user &&{ icon: 'bell', label: `Notificações (${unreadCount})`, action: () =>router.push('/(home)/notifications') },
   user &&{ icon: 'cart', label: 'Pedidos', action: () => router.push('/(home)/orders')  },
   user && { icon: 'car', label: 'Fornecedores', action: () => router.push('/(home)/suplier')  },
   user && { icon: 'cog', label: 'Configurações', action: () => setShowSettings(true) },
