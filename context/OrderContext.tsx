@@ -67,27 +67,9 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const suppliersSnapshot = await getDocs(q);
       
       const suppliersData = suppliersSnapshot.docs
-        .map(doc => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            name: data.name || '',
-            email: data.email || '',
-            phone: data.phone || '',
-            address: data.address || '',
-            pricePerLiter: data.pricePerLiter || 0,
-            userType: data.userType,
-            photo: data.photo || '',
-            ...(data.location && { 
-              location: {
-                lat: data.location.lat || 0,
-                lng: data.location.lng || 0
-              }
-            })
-          } as Supplier;
-        })
-        .filter(supplier => supplier.id); // Filtra suppliers com ID válido
-      
+        .map(doc =>  doc.data() as Supplier)
+        .filter(supplier => supplier.online); 
+      console.log('resultado',suppliersData)
       setSuppliers(suppliersData);
     } catch (err) {
       console.error('Erro ao buscar fornecedores:', err);

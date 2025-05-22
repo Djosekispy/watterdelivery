@@ -42,16 +42,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const loadUser = async () => {
       const savedUser = await getUserFromStorage();
       setUser(savedUser);
-  
+      console.log(JSON.stringify(savedUser))
       if (savedUser) {
         router.push('/(home)/');
       } else {
         router.push('/(auth)/login');
       }
-  
       setIsLoading(false);
     };
-  
     loadUser();
   }, []);
   
@@ -66,8 +64,7 @@ const login = async (email: string, password: string) => {
       const querySnapshot = await getDocs(q);
       const userDoc = querySnapshot.docs[0];
       setUser(userDoc.data() as User);
-      await saveUserToStorage(userDoc.data());
-      router.push("/(home)/");
+      saveUserToStorage(userDoc.data()).then( () => router.push("/(home)/") );
     }).catch((error) => {
       showToast('error',`${error}`);
     }).finally(() => {

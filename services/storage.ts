@@ -14,7 +14,6 @@ export async function saveUserToStorage(user: Partial<User>) {
   phone: user.phone || '',
   address: user.address || '',
   pricePerLiter: user.pricePerLiter || null
-
   };
   await SecureStore.setItemAsync(CURRENT_USER_KEY, JSON.stringify(safeUser));
 }

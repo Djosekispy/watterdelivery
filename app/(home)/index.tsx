@@ -165,7 +165,6 @@ const updateOnlineStatus = async () => {
       className="absolute bottom-24 right-6 rounded-full  items-center justify-center shadow-lg"
     >
     <Ionicons name="watch-sharp" size={24} color={(status || user.online ) ? "green" :  "red"} />
-    <Text> {`${user.online}`} </Text>
     </TouchableOpacity>}
   
   
