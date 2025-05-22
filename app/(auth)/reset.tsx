@@ -30,7 +30,7 @@ const ResetPasswordScreen = () => {
   };
 
   const handleBackToLogin = () => {
-    router.push('/(auth)');
+    router.push('/(auth)/login');
   };
 
   return (

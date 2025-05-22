@@ -33,10 +33,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' as 'success' | 'error' });
   const { location, errorMsg, loading } = useContext(LocationContext);
-  const userLocation = {
-    lat: location?.coords.latitude as number,
-    lng: location?.coords.longitude as number,
-  }
+
   const showToast = (type: 'success' | 'error', message : string) => {
     setToast({visible: true, message, type });
   };
@@ -57,7 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 const login = async (email: string, password: string) => {
     setIsLoading(true);
-    signInWithEmailAndPassword(auth, email, password).then(async (userCredential) => {
+     signInWithEmailAndPassword(auth, email, password).then(async (userCredential) => {
       const firebaseUser = userCredential.user;
       const usersRef = collection(db, 'users');
       const q = query(usersRef, where('email', '==', email));
@@ -65,7 +62,7 @@ const login = async (email: string, password: string) => {
       const userDoc = querySnapshot.docs[0];
       setUser(userDoc.data() as User);
       await saveUserToStorage(userDoc.data());
-      await updatedUser({online : true , location : { lat: userLocation.lat, lng: userLocation.lng }},'Bem vindo de volta!')
+      await updatedUser({email: firebaseUser.email as string,online : true},'Bem vindo de volta!')
       router.push("/(home)/");
     }).catch((error) => {
       showToast('error',`${error}`);
@@ -77,10 +74,24 @@ const login = async (email: string, password: string) => {
 const updatedUser = async (userData: Partial<User>, message ? : string) => {
   setIsLoading(true);
   const usersRef = collection(db, 'users');
-  const q = query(usersRef, where('email', '==', auth.currentUser?.email));
+  let q;
+
+  if (user?.id) {
+    q = query(usersRef, where('id', '==', user.id));
+  } 
+  if (user?.email) {
+    console.log('Tudo certo',JSON.stringify(userData))
+    q = query(usersRef, where('email', '==', user.email));
+  } else {
+    console.log('Deu Erro',JSON.stringify(userData))
+    throw new Error('Nenhum ID ou email de usuário disponível para consulta');
+  }
   const querySnapshot = await getDocs(q);
   updateDoc(querySnapshot.docs[0].ref, {...userData}).then( async() => {
     setUser(userData as User);
+    auth.currentUser && updateProfile(auth.currentUser, {
+      displayName: userData.name,
+    });
     await saveUserToStorage({...userData});
     showToast('success', message ?? 'Usuário atualizado com sucesso!');
   }).catch((error) => {
@@ -122,7 +133,6 @@ const register = async (userData: Partial<User>, password: string) => {
         email: userData.email || '',
         password: '', 
         online : true,
-        location: userLocation,
         phone: userData.phone || '',
         address: userData.address || '',
         photo: firebaseUser.photoURL || '',
@@ -150,17 +160,11 @@ const register = async (userData: Partial<User>, password: string) => {
     setUser(null);
   };
 
-  const updateUserLocation = (location: { lat: number; lng: number }) => {
+  const updateUserLocation = async (location: { lat: number; lng: number }) => {
     if (!user) return;
-
-    const updatedUser = { ...user, location };
-    SecureStore.setItem(CURRENT_USER_KEY, JSON.stringify(updatedUser));
-    const usersJson = SecureStore.getItem(MOCK_USERS_KEY) || '[]';
-    const users = JSON.parse(usersJson) as User[];
-    const updatedUsers = users.map(u => u.id === user.id ? {...u, location} : u);
-    SecureStore.setItem(MOCK_USERS_KEY, JSON.stringify(updatedUsers));
-    
-    setUser(updatedUser);
+    const updatedUserData = { ...user, location };
+    await updatedUser(updatedUserData)
+    setUser(updatedUserData);
   };
 
   const value = {
