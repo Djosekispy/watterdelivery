@@ -145,10 +145,8 @@ const register = async (userData: Partial<User>, password: string) => {
           pricePerLiter: userData.pricePerLiter || 0
         }),
       };
-      await addDoc(collection(db, "users"), newUser);
-      setTimeout(async() => {
-        await login(firebaseUser.email as string, password); 
-      }, 2000);
+       addDoc(collection(db, "users"), newUser).then(async () =>  await login(firebaseUser.email as string, password));
+
     }).catch((error) => {
       showToast('error','Erro ao cadastrar!');
     }).finally(() => {
