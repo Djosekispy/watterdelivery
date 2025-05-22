@@ -1,7 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, UserType } from '@/types';
-import * as SecureStore from 'expo-secure-store';
+import { User } from '@/types';
 import { useRouter } from 'expo-router';
 import { auth, db } from '@/services/firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
@@ -10,6 +9,7 @@ import Toast from '@/components/ui/toast';
 import LoadingModal from '@/components/ui/loading';
 import { clearUserFromStorage, getUserFromStorage, saveUserToStorage } from '@/services/storage';
 import { LocationContext } from './LocationContext';
+
 
 interface AuthContextType {
   user: User | null;
@@ -24,7 +24,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock database of users
 const MOCK_USERS_KEY = 'agua_expressa_users';
 const CURRENT_USER_KEY = 'agua_expressa_current_user';
 
@@ -42,14 +41,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    useEffect(() => {
     const loadUser = async () => {
       const savedUser = await getUserFromStorage();
-      setTimeout(()=>{
-        router.push('/(home)/');
-        setIsLoading(false);
-      },3000);
       setUser(savedUser);
+  
+      if (savedUser) {
+        router.push('/(home)/');
+      } else {
+        router.push('/(auth)/login');
+      }
+  
+      setIsLoading(false);
     };
+  
     loadUser();
   }, []);
+  
   
 
 const login = async (email: string, password: string) => {
@@ -62,7 +67,6 @@ const login = async (email: string, password: string) => {
       const userDoc = querySnapshot.docs[0];
       setUser(userDoc.data() as User);
       await saveUserToStorage(userDoc.data());
-      await updatedUser({email: firebaseUser.email as string,online : true},'Bem vindo de volta!')
       router.push("/(home)/");
     }).catch((error) => {
       showToast('error',`${error}`);

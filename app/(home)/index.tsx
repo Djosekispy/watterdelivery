@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { View, TouchableOpacity, Modal, Text, StyleSheet, Platform } from 'react-native';
 import { useAuth } from '@/context/AuthContext';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import MapView, { MapType, Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { LocationContext } from '@/context/LocationContext';
 import { useRouter } from 'expo-router';
@@ -20,7 +20,7 @@ interface MenuOption {
 }
 
 const HomeScreen = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, updatedUser } = useAuth();
   const mapRef = useRef<MapView>(null);
   const router = useRouter();
   const [mapType, setMapType] = useState<MapType>('standard');
@@ -30,6 +30,7 @@ const HomeScreen = () => {
   const { location, errorMsg, loading } = useContext(LocationContext);
   const [showProfile, setShowProfile] = useState(false);
   const [mapReady, setMapReady] = useState(false);
+  const [status, setStatus ] = useState(false)
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<{label : string, value: MapType, icon : ()=>void}[]>([
     {label: 'Padrão', value: 'standard', icon: () => <MaterialCommunityIcons name="map-outline" size={20} color="#3B82F6" />},
@@ -51,6 +52,19 @@ const HomeScreen = () => {
   !user && { icon: 'login', label: 'Entrar', action: () => router.push('/(auth)/login') },
 ].filter(Boolean) as MenuOption[];
 
+
+const updateOnlineStatus = async () => {
+  setStatus(!status);
+ user && await updatedUser({ 
+    id : user.id,
+    email: user.email,
+    online: !status, 
+    location : {
+    lat: location?.coords.latitude as number,
+    lng: location?.coords.longitude as number,
+  }
+ },'Agora poderá receber pedidos')
+}
 
   const handleMapLayout = () => {
     setMapReady(true);
@@ -138,12 +152,22 @@ const HomeScreen = () => {
         </View>
       )}
 
+ 
       <TouchableOpacity
-        onPress={() => setMenuVisible(true)}
-        className="absolute bottom-6 right-6 bg-blue-500 rounded-full w-14 h-14 items-center justify-center shadow-lg"
-      >
-        <MaterialCommunityIcons name="menu" size={30} color="white" />
-      </TouchableOpacity>
+      onPress={() => setMenuVisible(true)}
+      className="absolute bottom-6 right-6 bg-blue-500 rounded-full w-14 h-14 items-center justify-center shadow-lg"
+    >
+      <MaterialCommunityIcons name="menu" size={30} color="white" />
+    </TouchableOpacity>
+
+{ user &&    <TouchableOpacity
+      onPress={async() => await updateOnlineStatus()}
+      className="absolute bottom-24 right-6 rounded-full  items-center justify-center shadow-lg"
+    >
+    <Ionicons name="watch-sharp" size={24} color={status ? "green" :  "red"} />
+    </TouchableOpacity>}
+  
+  
 
       <Modal
         animationType="slide"

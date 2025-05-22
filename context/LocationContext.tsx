@@ -23,7 +23,6 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({ children }) 
     const [location, setLocation] = useState<Location.LocationObject | null>(null);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);   
-    const { updateUserLocation } = useAuth()
   
     useEffect(() => {
     (async () => {
@@ -41,11 +40,7 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({ children }) 
                 accuracy: Location.Accuracy.High
             });
             setLocation(currentLocation);
-            await updateUserLocation({
-                lat: currentLocation.coords.latitude,
-                lng: currentLocation.coords.longitude
-            })
-
+        
             // Depois inicia o watch
             const locationSubscription = await Location.watchPositionAsync(
                 {

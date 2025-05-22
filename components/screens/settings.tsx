@@ -159,7 +159,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
       onRequestClose={onClose}
       statusBarTranslucent
     >
-        <View className={`bg-white rounded-t-3xl ${Platform.OS === 'ios' ? 'pb-8' : 'pb-4'}`}>
+        <View className={`bg-white rounded-t-3xl ${Platform.OS === 'ios' ? 'py-8' : 'py-4'}`}>
           <View className="w-12 h-1 bg-gray-300 rounded-full mx-auto mt-3 mb-4" />
           
           <ScrollView 

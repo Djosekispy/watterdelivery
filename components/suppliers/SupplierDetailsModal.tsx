@@ -1,6 +1,7 @@
 import { View, Text, Image, Modal, TouchableOpacity, Linking } from 'react-native';
 import { MaterialIcons, FontAwesome } from '@expo/vector-icons';
 import { Supplier } from '../../types';
+import { useAuth } from '@/context/AuthContext';
 
 interface SupplierDetailsModalProps {
   visible: boolean;
@@ -10,6 +11,7 @@ interface SupplierDetailsModalProps {
 }
 
 const SupplierDetailsModal = ({ visible, supplier, onClose, onOrderPress }: SupplierDetailsModalProps) => {
+  const {user } = useAuth()
   if (!supplier) return null;
 
   const handleCall = () => {
@@ -81,7 +83,7 @@ const SupplierDetailsModal = ({ visible, supplier, onClose, onOrderPress }: Supp
             <TouchableOpacity
               onPress={onOrderPress}
               className="px-4 py-2 bg-blue-600 rounded-lg"
-            //  disabled={!supplier.online}
+              disabled={!(supplier.id === user?.id) || !supplier.online}
             >
               <Text className="text-white">Fazer Pedido</Text>
             </TouchableOpacity>
