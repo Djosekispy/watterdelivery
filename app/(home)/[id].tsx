@@ -36,7 +36,6 @@ const OrderDetailsScreen = () => {
           const userIdToFetch = isSupplier ? orderData.consumerId : orderData.supplierId;
           if (userIdToFetch) {
             const userData = await getUserById(userIdToFetch);
-            console.log(JSON.stringify(userData));
             setUserDetails(userData);
           }
         }

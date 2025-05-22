@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { Order, OrderStatus, Notification } from '@/types';
+import { Order, OrderStatus, Notification, Supplier } from '@/types';
 import { useAuth } from './AuthContext';
 import { 
   collection, 
@@ -24,6 +24,7 @@ type OrderContextProps = {
   unreadCount: number;
   loading: boolean;
   error: string | null;
+  suppliers : Supplier[];
   getOrderById : (orderId: string) => Promise<Order>;
   createOrder: (orderData: Omit<Order, 'id' | 'createdAt' | 'status'>) => Promise<void>;
   updateOrderStatus: (orderId: string, status: OrderStatus) => Promise<void>;
@@ -42,6 +43,30 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [ suppliers, setSuppliers ] = useState<Supplier[]>([])
+
+  const fetchAllSuppliers = async () => {
+    try {
+      const suppliersRef = collection(db, 'users');
+      const q = query(suppliersRef, where('userType', '==', 'supplier'));
+      const suppliersSnapshot = await getDocs(q);
+      
+      const suppliersData = suppliersSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Supplier[];
+      
+      setSuppliers(suppliersData);
+    } catch (err) {
+      console.error('Erro ao buscar fornecedores:', err);
+      setError(err instanceof Error ? err.message : 'Erro desconhecido');
+    }
+  };
+
+  useEffect(() => {
+    fetchAllSuppliers();
+  }, []);
 
   // Converter Firestore Timestamp para Date
   const convertTimestamp = (timestamp: Timestamp | Date | undefined): Date | undefined => {
@@ -363,6 +388,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         orders,
         notifications,
         unreadCount,
+        suppliers,
         loading,
         error,
         getOrderById,

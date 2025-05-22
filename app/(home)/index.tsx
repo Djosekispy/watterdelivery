@@ -26,7 +26,7 @@ const HomeScreen = () => {
   const [mapType, setMapType] = useState<MapType>('standard');
   const [showSettings, setShowSettings] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
-  const {  unreadCount } = useOrders();
+  const {  unreadCount,suppliers } = useOrders();
   const { location, errorMsg, loading } = useContext(LocationContext);
   const [showProfile, setShowProfile] = useState(false);
   const [mapReady, setMapReady] = useState(false);
@@ -48,12 +48,13 @@ const HomeScreen = () => {
   user && { icon: 'car', label: 'Fornecedores', action: () => router.push('/(home)/suplier')  },
   user && { icon: 'cog', label: 'Configurações', action: () => setShowSettings(true) },
   user && { icon: 'logout', label: 'Sair', action: () => logout() },
-  !user && { icon: 'login', label: 'Entrar', action: () => router.push('/(auth)') },
+  !user && { icon: 'login', label: 'Entrar', action: () => router.push('/(auth)/login') },
 ].filter(Boolean) as MenuOption[];
 
 
   const handleMapLayout = () => {
     setMapReady(true);
+   // console.log(JSON.stringify(suppliers))
   };
 
   return (

@@ -65,7 +65,7 @@ const login = async (email: string, password: string) => {
       const userDoc = querySnapshot.docs[0];
       setUser(userDoc.data() as User);
       await saveUserToStorage(userDoc.data());
-      await updatedUser({online : true , location : userLocation},'Bem vindo de volta!')
+      await updatedUser({online : true , location : { lat: userLocation.lat, lng: userLocation.lng }},'Bem vindo de volta!')
       router.push("/(home)/");
     }).catch((error) => {
       showToast('error',`${error}`);
@@ -77,13 +77,10 @@ const login = async (email: string, password: string) => {
 const updatedUser = async (userData: Partial<User>, message ? : string) => {
   setIsLoading(true);
   const usersRef = collection(db, 'users');
-  const q = query(usersRef, where('id', '==', user?.id));
+  const q = query(usersRef, where('email', '==', auth.currentUser?.email));
   const querySnapshot = await getDocs(q);
   updateDoc(querySnapshot.docs[0].ref, {...userData}).then( async() => {
     setUser(userData as User);
-    auth.currentUser && updateProfile(auth.currentUser, {
-      displayName: userData.name,
-    });
     await saveUserToStorage({...userData});
     showToast('success', message ?? 'Usuário atualizado com sucesso!');
   }).catch((error) => {
@@ -147,8 +144,8 @@ const register = async (userData: Partial<User>, password: string) => {
   };
 
   const logout = async () => {
-    await updatedUser({online : false},'Até Breve!')
     await signOut(auth);
+    // await updatedUser({online : false},'Até Breve!')
     await clearUserFromStorage();
     setUser(null);
   };
