@@ -84,7 +84,6 @@ const updatedUser = async (userData: Partial<User>, message ? : string) => {
     q = query(usersRef, where('id', '==', user.id));
   } 
   if (user?.email) {
-    console.log('Tudo certo',JSON.stringify(userData))
     q = query(usersRef, where('email', '==', user.email));
   } else {
     console.log('Deu Erro',JSON.stringify(userData))
@@ -92,9 +91,13 @@ const updatedUser = async (userData: Partial<User>, message ? : string) => {
   }
   const querySnapshot = await getDocs(q);
   updateDoc(querySnapshot.docs[0].ref, {...userData}).then( async() => {
-    setUser(userData as User);
+   
     auth.currentUser && updateProfile(auth.currentUser, {
       displayName: userData.name,
+    });
+    setUser({
+      ...user,
+      ...userData,
     });
     await saveUserToStorage({...userData});
     showToast('success', message ?? 'Usuário atualizado com sucesso!');

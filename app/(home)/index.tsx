@@ -68,7 +68,7 @@ const updateOnlineStatus = async () => {
 
   const handleMapLayout = () => {
     setMapReady(true);
-   // console.log(JSON.stringify(suppliers))
+    console.log(JSON.stringify(suppliers))
   };
 
   return (
@@ -164,7 +164,8 @@ const updateOnlineStatus = async () => {
       onPress={async() => await updateOnlineStatus()}
       className="absolute bottom-24 right-6 rounded-full  items-center justify-center shadow-lg"
     >
-    <Ionicons name="watch-sharp" size={24} color={status ? "green" :  "red"} />
+    <Ionicons name="watch-sharp" size={24} color={(status || user.online ) ? "green" :  "red"} />
+    <Text> {`${user.online}`} </Text>
     </TouchableOpacity>}
   
   
