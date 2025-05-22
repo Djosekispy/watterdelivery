@@ -26,7 +26,7 @@ const HomeScreen = () => {
   const [mapType, setMapType] = useState<MapType>('standard');
   const [showSettings, setShowSettings] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
-  const {  unreadCount,suppliers } = useOrders();
+  const {  unreadCount,suppliers, fetchAllSuppliers } = useOrders();
   const { location, errorMsg, loading } = useContext(LocationContext);
   const [showProfile, setShowProfile] = useState(false);
   const [mapReady, setMapReady] = useState(false);
@@ -68,8 +68,18 @@ const updateOnlineStatus = async () => {
 
   const handleMapLayout = () => {
     setMapReady(true);
-    console.log(JSON.stringify(suppliers))
+   
   };
+
+  useEffect(() => {
+    
+   const getAllData = async() => {
+    if(suppliers.length === 0){ 
+      await fetchAllSuppliers();
+    }
+   }
+   getAllData();
+  },[user])
 
   return (
     <View className="flex-1">
@@ -147,6 +157,20 @@ const updateOnlineStatus = async () => {
                   description="Você está aqui"
                 />
               )}
+
+              {
+                suppliers.length > 0   && suppliers.map((supplier) => (
+                  supplier.location &&  <Marker
+                  pinColor='green'
+                    key={supplier.id}
+                    coordinate={{
+                      latitude: supplier?.location.lat,
+                      longitude: supplier?.location.lng,
+                    }}
+                    title={supplier.name}
+                    description={supplier.address}
+                  />))
+              }
             </MapView>
           )}
         </View>

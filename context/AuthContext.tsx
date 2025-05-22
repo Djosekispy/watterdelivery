@@ -42,7 +42,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const loadUser = async () => {
       const savedUser = await getUserFromStorage();
       setUser(savedUser);
-      console.log(JSON.stringify(savedUser))
       if (savedUser) {
         router.push('/(home)/');
       } else {

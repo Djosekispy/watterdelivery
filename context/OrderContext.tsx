@@ -58,19 +58,11 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const fetchAllSuppliers = useCallback(async () => {
     try {
       setLoading(true);
-      const suppliersRef = collection(db, 'users');
-      const q = query(
-        suppliersRef, 
-        where('userType', '==', 'supplier')
-      );
-      
-      const suppliersSnapshot = await getDocs(q);
-      
-      const suppliersData = suppliersSnapshot.docs
-        .map(doc =>  doc.data() as Supplier)
-        .filter(supplier => supplier.online); 
-      console.log('resultado',suppliersData)
-      setSuppliers(suppliersData);
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('userType', '==', 'supplier'));
+      const querySnapshot = await getDocs(q);
+      const userDocs = querySnapshot.docs.map(doc => doc.data() as  Supplier).filter(user => user.online);
+      setSuppliers(userDocs);
     } catch (err) {
       console.error('Erro ao buscar fornecedores:', err);
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
