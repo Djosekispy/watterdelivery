@@ -10,6 +10,7 @@ import SettingsModal from '@/components/screens/settings';
 import ProfileModal from '@/components/screens/ProfileModal';
 import MapsAnimation from '@/components/ui/location-search';
 import { useOrders } from '@/context/OrderContext';
+import { seedSuppliers } from '@/db/supplierSeed';
 
 
 
@@ -72,7 +73,7 @@ const updateOnlineStatus = async () => {
   };
 
   useEffect(() => {
-    
+    //seedSuppliers();
    const getAllData = async() => {
     if(suppliers.length === 0){ 
       await fetchAllSuppliers();
