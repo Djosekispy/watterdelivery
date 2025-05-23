@@ -15,6 +15,8 @@ import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { auth } from '@/services/firebase';
 import { LocationContext } from '@/context/LocationContext';
+import { format } from 'date-fns';
+import { pt } from 'date-fns/locale';
 
 interface ProfileModalProps {
   visible: boolean;
@@ -135,7 +137,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose}) => {
                 <InfoItem
                   icon="clock-outline"
                   label="Membro desde"
-                  value="Janeiro 2024"
+                  value={user?.createdAt ? format(new Date(user.createdAt), "MMMM yyyy", { locale: pt }) : 'Data não disponível'}
                 />
               </View>
 
