@@ -2,7 +2,7 @@ import { View, Text, Image, Modal, TouchableOpacity, Linking, StyleSheet } from 
 import { MaterialIcons, FontAwesome } from '@expo/vector-icons';
 import { Supplier } from '../../types';
 import { useAuth } from '@/context/AuthContext';
-import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { useRef, useState } from 'react';
 
 interface SupplierDetailsModalProps {
@@ -13,8 +13,10 @@ interface SupplierDetailsModalProps {
 }
 
 const SupplierDetailsModal = ({ visible, supplier, onClose, onOrderPress }: SupplierDetailsModalProps) => {
-  const {user } = useAuth()
+  const { user } = useAuth();
   const mapRef = useRef<MapView>(null);
+  const [mapReady, setMapReady] = useState(false);
+
   if (!supplier) return null;
 
   const handleCall = () => {
@@ -25,10 +27,8 @@ const SupplierDetailsModal = ({ visible, supplier, onClose, onOrderPress }: Supp
     Linking.openURL(`https://wa.me/${supplier.phone}?text=Olá ${supplier.name}, gostaria de fazer um pedido`);
   };
 
-  const [mapReady, setMapReady] = useState(false);
   const handleMapLayout = () => {
     setMapReady(true);
-   
   };
 
   return (
@@ -82,27 +82,39 @@ const SupplierDetailsModal = ({ visible, supplier, onClose, onOrderPress }: Supp
             </View>
           </View>
           <View className="flex-1">
-          {supplier.location && mapReady && (
-            <MapView
-              ref={mapRef}
-              provider={PROVIDER_GOOGLE}
-              mapType='standard'
-              style={{ flex: 1 }}
-              followsUserLocation={true}
-              googleRenderer='LATEST'
-              initialRegion={{
-                latitude: supplier.location.lat,
-                longitude: supplier.location.lng,
-                latitudeDelta: 0.005,
-                longitudeDelta: 0.005,
-              }}
-              showsUserLocation
-              showsMyLocationButton
-              onLayout={handleMapLayout}
-            >
-            </MapView>
-          )}
-        </View>
+
+           
+            {supplier.location &&  (
+              <MapView
+                ref={mapRef}
+                provider={PROVIDER_GOOGLE}
+                mapType='standard'
+                style={StyleSheet.absoluteFillObject}
+                followsUserLocation={true}
+                googleRenderer='LATEST'
+                initialRegion={{
+                  latitude: supplier.location.lat,
+                  longitude: supplier.location.lng,
+                  latitudeDelta: 0.005,
+                  longitudeDelta: 0.005,
+                }}
+                showsUserLocation
+                showsMyLocationButton
+                onLayout={handleMapLayout}
+              >
+                 {mapReady && (
+                <Marker
+                  coordinate={{
+                    latitude: supplier.location.lat,
+                     longitude: supplier.location.lng,
+                  }}
+                  title={supplier.name}
+                  description={supplier.address}
+                />
+              )}
+                </MapView>
+            )}
+          </View>
 
           <View className="flex-row justify-between mt-4">
             <TouchableOpacity
