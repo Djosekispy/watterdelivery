@@ -1,4 +1,4 @@
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, Alert, Linking, Platform } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useOrders } from '@/context/OrderContext';
 import { useAuth } from '@/context/AuthContext';
@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { getUserById } from '@/services/userService';
 import { User } from '@/types';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 
 const OrderDetailsScreen = () => {
   const { id } = useLocalSearchParams();
@@ -19,11 +20,27 @@ const OrderDetailsScreen = () => {
   const [order, setOrder] = useState<Order | null>(null);
   const [userDetails, setUserDetails] = useState<User | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [mapReady, setMapReady] = useState(false);
 
   // Determina se o usuário atual é o fornecedor deste pedido
   const isSupplier = user?.userType === 'supplier';
   const isOrderSupplier = order?.supplierId === user?.id;
   const isOrderConsumer = order?.consumerId === user?.id;
+
+  // Função para abrir navegação no app de mapas
+  const openNavigation = () => {
+    if (!order?.location) return;
+    
+    const { lat, lng } = order.location;
+    const url = Platform.select({
+      ios: `maps://app?daddr=${lat},${lng}&dirflg=d`,
+      android: `google.navigation:q=${lat},${lng}`,
+    });
+
+    Linking.openURL(url as string).catch(err => {
+      Alert.alert('Erro', 'Não foi possível abrir o aplicativo de mapas');
+    });
+  };
 
   // Carrega os dados do pedido e do usuário relacionado
   useEffect(() => {
@@ -236,6 +253,49 @@ const OrderDetailsScreen = () => {
           </View>
         </View>
 
+        {order.location && (
+          <View className="bg-white rounded-lg p-4 shadow-sm mb-4">
+            <View className="flex-row justify-between items-center mb-3">
+              <Text className="font-semibold text-gray-800">Localização de Entrega</Text>
+              <TouchableOpacity 
+                onPress={openNavigation}
+                className="flex-row items-center bg-blue-50 px-3 py-1 rounded-full"
+              >
+                <MaterialCommunityIcons name="navigation" size={16} color="#3b82f6" />
+                <Text className="text-blue-600 ml-1 text-sm">Navegar</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <View className="h-48 rounded-lg overflow-hidden">
+              <MapView
+                provider={PROVIDER_GOOGLE}
+                mapType="standard"
+                style={{ flex: 1 }}
+                initialRegion={{
+                  latitude: order.location.lat,
+                  longitude: order.location.lng,
+                  latitudeDelta: 0.005,
+                  longitudeDelta: 0.005,
+                }}
+                onMapReady={() => setMapReady(true)}
+                onLayout={() => setMapReady(true)}
+              >
+                {mapReady && (
+                  <Marker
+                    coordinate={{
+                      latitude: order.location.lat,
+                      longitude: order.location.lng,
+                    }}
+                    title="Local de Entrega"
+                    description={order.location.address}
+                  />
+                )}
+              </MapView>
+            </View>
+          </View>
+        )}
+
+
         {/* Ações disponíveis */}
         {getStatusActions().length > 0 && (
           <View className="mt-4">
@@ -248,7 +308,7 @@ const OrderDetailsScreen = () => {
                   disabled={actionLoading}
                   className={`px-4 py-2 rounded-full mr-2 mb-2 flex-row items-center ${action.color.split(' ')[0]}`}
                 >
-                  <MaterialIcons name={action.icon} size={18} color={action.color.split(' ')[1].split('-')[2]} />
+                  <MaterialIcons name={action.icon as any} size={18} color={action.color.split(' ')[1].split('-')[2]} />
                   <Text className={`ml-2 ${action.color.split(' ')[1]}`}>
                     {action.label}
                   </Text>
