@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { View, TouchableOpacity, Modal, Text, StyleSheet, Platform } from 'react-native';
 import { useAuth } from '@/context/AuthContext';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import MapView, { MapType, Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { LocationContext } from '@/context/LocationContext';
 import { useRouter } from 'expo-router';
@@ -64,7 +64,7 @@ const updateOnlineStatus = async () => {
     lat: location?.coords.latitude as number,
     lng: location?.coords.longitude as number,
   }
- },'Agora poderá receber pedidos')
+ },'Muito Bom ter você de volta!')
 }
 
   const handleMapLayout = () => {
@@ -134,10 +134,6 @@ const updateOnlineStatus = async () => {
               style={StyleSheet.absoluteFillObject}
               followsUserLocation={true}
               googleRenderer='LATEST'
-              onMoveShouldSetResponder={(event) => {
-               // alert('esta se movimentando')
-                return true;
-              }}
               initialRegion={{
                 latitude: location.coords.latitude,
                 longitude: location.coords.longitude,
@@ -189,7 +185,7 @@ const updateOnlineStatus = async () => {
       onPress={async() => await updateOnlineStatus()}
       className="absolute bottom-24 right-6 rounded-full  items-center justify-center shadow-lg"
     >
-    <Ionicons name="watch-sharp" size={24} color={(status || user.online ) ? "green" :  "red"} />
+    <Feather name={(status || user.online ) ? "cloud-lightning" :  "cloud-off"} size={36} color={(status || user.online ) ? "green" :  "red"} />
     </TouchableOpacity>}
   
   
