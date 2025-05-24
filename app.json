@@ -13,15 +13,16 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-       "supportsTablet": true,
+      "supportsTablet": true,
       "config": {
         "googleMaps": {
           "googleMapsApiKey": "AIzaSyAOgcbrjuBmK_FBqSfcqQRTkEbSQpijOJo"
         }
-      }
+      },
+      "bundleIdentifier": "com.osvaldovictor31.Ovava"
     },
     "android": {
-          "config": {
+      "config": {
         "googleMaps": {
           "apiKey": "AIzaSyAOgcbrjuBmK_FBqSfcqQRTkEbSQpijOJo"
         }
@@ -29,8 +30,12 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#ffffff"
-        
-      }
+      },
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ],
+      "package": "com.osvaldovictor31.Ovava"
     },
     "web": {
       "bundler": "metro",
@@ -48,27 +53,35 @@
       [
         "expo-location",
         {
-         "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location.",
+          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location.",
           "locationWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location while using the app."
-      }
+        }
       ],
-       [
+      [
         "expo-maps",
         {
           "requestLocationPermission": "true",
           "locationPermission": "Allow $(PRODUCT_NAME) to use your location"
         }
       ],
-     [
-      "expo-secure-store",
-      {
-        "configureAndroidBackup": true,
-        "faceIDPermission": "Allow $(PRODUCT_NAME) to access your Face ID biometric data."
-      }
-    ]
+      [
+        "expo-secure-store",
+        {
+          "configureAndroidBackup": true,
+          "faceIDPermission": "Allow $(PRODUCT_NAME) to access your Face ID biometric data."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "5c9b6b81-2b65-4735-8fed-0cf6592ddf01"
+      }
     }
   }
 }
