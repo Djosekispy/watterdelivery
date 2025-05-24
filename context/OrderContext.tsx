@@ -18,6 +18,8 @@ import {
 } from 'firebase/firestore';
 import { Alert } from 'react-native';
 import { db } from '@/services/firebase';
+import Toast from '@/components/ui/toast';
+import LoadingModal from '@/components/ui/loading';
 
 type OrderContextProps = {
   orders: Order[];
@@ -46,6 +48,11 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [toast, setToast] = useState({ visible: false, message: '', type: 'success' as 'success' | 'error' });
+ 
+  const showToast = (type: 'success' | 'error', message : string) => {
+    setToast({visible: true, message, type });
+  };
 
   // Converter Firestore Timestamp para Date
   const convertTimestamp = (timestamp: Timestamp | Date | undefined): Date | undefined => {
@@ -242,11 +249,10 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       await batch.commit();
       
-      Alert.alert('Sucesso', 'Pedido criado com sucesso!');
+      showToast('success','Pedido criado com sucesso!');
     } catch (err) {
-      console.error('Erro ao criar pedido:', err);
       setError(err instanceof Error ? err.message : 'Erro ao criar pedido');
-      Alert.alert('Erro', 'Falha ao criar pedido');
+      showToast('error','Falha ao criar pedido!');
       throw err;
     } finally {
       setLoading(false);
@@ -291,9 +297,8 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         });
       }
     } catch (err) {
-      console.error('Erro ao atualizar pedido:', err);
       setError(err instanceof Error ? err.message : 'Erro ao atualizar pedido');
-      Alert.alert('Erro', 'Falha ao atualizar pedido');
+      showToast('error','Falha ao atualizar pedido!');
       throw err;
     } finally {
       setLoading(false);
@@ -330,9 +335,8 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         });
       }
     } catch (err) {
-      console.error('Erro ao aceitar pedido:', err);
       setError(err instanceof Error ? err.message : 'Erro ao aceitar pedido');
-      Alert.alert('Erro', 'Falha ao aceitar pedido');
+      showToast('error','Falha ao aceitar pedido!')
       throw err;
     } finally {
       setLoading(false);
@@ -347,9 +351,8 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setLoading(true);
       await updateOrderStatus(orderId, 'canceled');
     } catch (err) {
-      console.error('Erro ao cancelar pedido:', err);
       setError(err instanceof Error ? err.message : 'Erro ao cancelar pedido');
-      Alert.alert('Erro', 'Falha ao cancelar pedido');
+      showToast('error','Falha ao cancelar pedido!')
       throw err;
     } finally {
       setLoading(false);
@@ -366,7 +369,6 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         read: true,
       });
     } catch (err) {
-      console.error('Erro ao marcar notificação como lida:', err);
       setError(err instanceof Error ? err.message : 'Erro ao marcar notificação como lida');
       throw err;
     }
@@ -398,7 +400,6 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         } as Order;
       });
     } catch (err) {
-      console.error('Erro ao buscar pedidos do fornecedor:', err);
       setError(err instanceof Error ? err.message : 'Erro ao buscar pedidos do fornecedor');
       throw err;
     } finally {
@@ -432,7 +433,6 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         } as Order;
       });
     } catch (err) {
-      console.error('Erro ao buscar pedidos do consumidor:', err);
       setError(err instanceof Error ? err.message : 'Erro ao buscar pedidos do consumidor');
       throw err;
     } finally {
@@ -474,6 +474,12 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         fetchAllSuppliers,
       }}
     >
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onHide={() => setToast({ ...toast, visible: false })}
+      />
       {children}
     </OrderContext.Provider>
   );
