@@ -155,7 +155,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose}) => {
                 <InfoItem
                   icon="clock-outline"
                   label="Membro desde"
-                  value={user?.createdAt ? String(user?.createdAt) : String(user?.createdAt)}
+                  value={String(user?.createdAt)}
                 />
               </View>
 

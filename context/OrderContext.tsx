@@ -71,7 +71,6 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const userDocs = querySnapshot.docs.map(doc => doc.data() as  Supplier).filter(user => user.online);
       setSuppliers(userDocs);
     } catch (err) {
-      console.error('Erro ao buscar fornecedores:', err);
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
       throw err;
     } finally {
