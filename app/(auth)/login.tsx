@@ -3,7 +3,7 @@ import { View, ScrollView, KeyboardAvoidingView, Platform, Text } from 'react-na
 import { useAuth } from '../../context/AuthContext';
 import { AuthTemplate } from '@/components/layout/AuthTemplate';
 import { LoginForm } from '@/components/screens/LoginForm';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import Toast from '@/components/ui/toast';
 
 const LoginScreen = () => {
@@ -11,7 +11,7 @@ const LoginScreen = () => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' as 'success' | 'error' });
-    
+  const { email, password } = useLocalSearchParams<{email : string, password: string}>()
   const showToast = (type: 'success' | 'error', message : string) => {
     setToast({visible: true, message, type });
   };
@@ -27,12 +27,10 @@ const LoginScreen = () => {
   };
 
   const handleForgotPassword = () => {
-    // Navegar para tela de recuperação de senha
      router.push('/(auth)/reset');
   };
 
   const handleSignUp = () => {
-    // Navegar para tela de cadastro
     router.push('/(auth)/register');
   };
 
@@ -53,6 +51,8 @@ const LoginScreen = () => {
           footerAction={handleSignUp}
         >
           <LoginForm 
+            email={email || ''}
+            password={password || ''}
             onSubmit={handleLogin} 
             loading={loading}
             onForgotPassword={handleForgotPassword}

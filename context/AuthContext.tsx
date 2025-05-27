@@ -145,7 +145,8 @@ const register = async (userData: Partial<User>, password: string) => {
           pricePerLiter: userData.pricePerLiter || 0
         }),
       };
-       addDoc(collection(db, "users"), newUser).then(async () =>  await login(firebaseUser.email as string, password));
+       addDoc(collection(db, "users"), newUser);
+       router.push({pathname:'/(auth)/login', params:{email : userData.email, password}})
 
     }).catch((error) => {
       showToast('error','Erro ao cadastrar!');

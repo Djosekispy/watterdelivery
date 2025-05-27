@@ -100,6 +100,24 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose}) => {
     </TouchableOpacity>
   );
 
+  const  formatarDataPortugues = (data : string) => {
+    if (!data) return 'Data não disponível';
+    
+    const date = new Date(data);
+    if (isNaN(date.getTime())) return 'Data inválida';
+  
+    const meses = [
+      'janeiro', 'fevereiro', 'março', 'abril',
+      'maio', 'junho', 'julho', 'agosto',
+      'setembro', 'outubro', 'novembro', 'dezembro'
+    ];
+  
+    const mes = meses[date.getMonth()];
+    const ano = date.getFullYear();
+  
+    return `${mes} ${ano}`;
+  }
+  
   return (
     <Modal
       visible={visible}
@@ -137,7 +155,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose}) => {
                 <InfoItem
                   icon="clock-outline"
                   label="Membro desde"
-                  value={user?.createdAt ? format(new Date(user.createdAt), "MMMM yyyy", { locale: pt }) : 'Data não disponível'}
+                  value={user?.createdAt ? String(user?.createdAt) : String(user?.createdAt)}
                 />
               </View>
 

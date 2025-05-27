@@ -15,14 +15,16 @@ interface LoginFormProps {
   onSubmit: (data: { email: string; password: string }) => void;
   loading?: boolean;
   onForgotPassword?: () => void;
+  email?: string;
+  password?: string;
 }
 
-export const LoginForm = ({ onSubmit, loading, onForgotPassword }: LoginFormProps) => {
+export const LoginForm = ({ onSubmit, loading, onForgotPassword, email, password }: LoginFormProps) => {
   const { control, handleSubmit, formState: { errors } } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
-      email: '',
-      password: '',
+      email: email || '',
+      password: password || '',
     },
   });
 

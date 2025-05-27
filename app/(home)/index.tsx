@@ -47,7 +47,7 @@ const HomeScreen = () => {
   user && { icon: 'account', label: 'Perfil', action: () => setShowProfile(true) },
   user &&{ icon: 'bell', label: `Notificações (${unreadCount})`, action: () =>router.push('/(home)/notifications') },
   user &&{ icon: 'cart', label: 'Pedidos', action: () => router.push('/(home)/orders')  },
-  user && { icon: 'car', label: 'Fornecedores', action: () => router.push('/(home)/suplier')  },
+  user && user.userType === 'consumer' && { icon: 'car', label: 'Fornecedores', action: () => router.push('/(home)/suplier')  },
   user && { icon: 'cog', label: 'Configurações', action: () => setShowSettings(true) },
   user && { icon: 'logout', label: 'Sair', action: () => logout() },
   !user && { icon: 'login', label: 'Entrar', action: () => router.push('/(auth)/login') },

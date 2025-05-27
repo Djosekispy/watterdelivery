@@ -203,14 +203,9 @@ const SupplierListScreen = () => {
         ...order,
         consumerId: user.id,
       });
-      
-      Alert.alert('Sucesso', 'Pedido criado com sucesso!');
       setShowOrderForm(false);
-      
-      // Opcional: navegar para tela de acompanhamento do pedido
-      // navigate.push(`/orders/${orderId}`);
+       navigate.push(`/(home)/orders`);
     } catch (error) {
-      console.error('Erro ao criar pedido:', error);
       Alert.alert('Erro', 'Não foi possível criar o pedido. Tente novamente.');
     }
   };
