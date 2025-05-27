@@ -17,6 +17,7 @@ import { auth } from '@/services/firebase';
 import { LocationContext } from '@/context/LocationContext';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
+import { Timestamp } from 'firebase/firestore';
 
 interface ProfileModalProps {
   visible: boolean;
@@ -100,24 +101,35 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose}) => {
     </TouchableOpacity>
   );
 
-  const  formatarDataPortugues = (data : string) => {
-    if (!data) return 'Data não disponível';
+  const convertTimestamp = (timestamp: Timestamp | Date | undefined): Date | undefined | string => {
+    if (!timestamp) return undefined;
     
-    const date = new Date(data);
-    if (isNaN(date.getTime())) return 'Data inválida';
-  
-    const meses = [
-      'janeiro', 'fevereiro', 'março', 'abril',
-      'maio', 'junho', 'julho', 'agosto',
-      'setembro', 'outubro', 'novembro', 'dezembro'
-    ];
-  
-    const mes = meses[date.getMonth()];
-    const ano = date.getFullYear();
-  
-    return `${mes} ${ano}`;
-  }
-  
+    if (timestamp instanceof Date) return timestamp;
+    
+    if (typeof timestamp === 'object' && 'toDate' in timestamp) {
+        const date = timestamp.toDate();
+        return date.toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: 'long',
+            year: 'numeric',
+        });
+    }
+    try {
+        const date = new Date(timestamp as any);
+        if (!isNaN(date.getTime())) {
+            return date.toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric',
+            });
+        }
+    } catch (e) {
+        console.warn('Formato de data inválido:', timestamp);
+    }
+    
+    return undefined;
+};
+
   return (
     <Modal
       visible={visible}
@@ -155,7 +167,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose}) => {
                 <InfoItem
                   icon="clock-outline"
                   label="Membro desde"
-                  value={String(user?.createdAt)}
+                  value={String(convertTimestamp(user?.createdAt as any))}
                 />
               </View>
 

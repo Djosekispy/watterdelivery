@@ -10,12 +10,6 @@ import LoadingModal from '@/components/ui/loading';
 import { clearUserFromStorage, getUserFromStorage, saveUserToStorage } from '@/services/storage';
 import { LocationContext } from './LocationContext';
 
-const convertTimestamp = (timestamp: Timestamp | Date | undefined): Date | undefined => {
-  if (!timestamp) return undefined;
-  if (timestamp instanceof Date) return timestamp;
-  return timestamp.toDate();
-};
-
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
@@ -67,7 +61,6 @@ const login = async (email: string, password: string) => {
       const q = query(usersRef, where('email', '==', email));
       const querySnapshot = await getDocs(q);
       const userDoc = querySnapshot.docs[0];
-      userDoc.data().createdAt = convertTimestamp(userDoc.data().createdAt)
       setUser(userDoc.data() as User);
       saveUserToStorage(userDoc.data()).then( () => router.push("/(home)/") );
     }).catch((error) => {
